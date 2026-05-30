@@ -1,0 +1,96 @@
+{
+  "realm": "skillup",
+  "enabled": true,
+  "displayName": "SkillUp",
+  "displayNameHtml": "<strong>SkillUp</strong> Tuition Management",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 3600,
+  "refreshTokenMaxReuse": 0,
+  "ssoSessionMaxLifespan": 36000,
+
+  "roles": {
+    "realm": [
+      { "name": "OWNER",       "description": "Platform owner — full access to all branches" },
+      { "name": "ADMIN",       "description": "Branch admin — full access to assigned branch" },
+      { "name": "MANAGER",     "description": "Manager — operational access, no financial reports" },
+      { "name": "CASHIER",     "description": "Fee collection and payment recording" },
+      { "name": "TEACHER",     "description": "Attendance marking, assignment grading" },
+      { "name": "ACCOUNTANT",  "description": "Financial reports and fee management" },
+      { "name": "VIEWER",      "description": "Read-only access" }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "skillup-admin",
+      "name": "SkillUp Admin Portal",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:3000"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "skillup-portal",
+      "name": "SkillUp Student Portal",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:5174/*",
+        "http://localhost:3001/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5174",
+        "http://localhost:3001"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "owner",
+      "email": "owner@skillup.local",
+      "firstName": "System",
+      "lastName": "Owner",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "owner_pass", "temporary": false }
+      ],
+      "realmRoles": ["OWNER"]
+    },
+    {
+      "username": "admin",
+      "email": "admin@skillup.local",
+      "firstName": "Branch",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "admin_pass", "temporary": false }
+      ],
+      "realmRoles": ["ADMIN"]
+    }
+  ]
+}

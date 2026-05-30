@@ -1,0 +1,103 @@
+spring:
+  application:
+    name: skillup-backend
+
+  # ── Database ──────────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://localhost:5432/skillup_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      auto-commit: false
+
+  # ── JPA ───────────────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate        # Flyway manages the schema — never let Hibernate alter it
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        default_schema: public
+    open-in-view: false
+
+  # ── Flyway ────────────────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}          # 6380 so it doesn't clash with CommerceFlow's Redis on 6379
+      password: ${REDIS_PASSWORD:skillup_redis_pass}
+
+  # ── Jackson (dates as ISO-8601, timezone Asia/KL) ─────────────────────────
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: Asia/Kuala_Lumpur
+    default-property-inclusion: non_null
+
+  # ── Security (OAuth2 Resource Server) ─────────────────────────────────────
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/skillup}
+          jwk-set-uri: ${KEYCLOAK_JWK_URI:http://localhost:8080/realms/skillup/protocol/openid-connect/certs}
+
+# ── Server ────────────────────────────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+# ── Actuator ──────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── OpenAPI / Swagger ─────────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+  show-actuator: false
+
+# ── App-specific settings ─────────────────────────────────────────────────
+skillup:
+  aws:
+    region: ${AWS_REGION:ap-southeast-1}
+    s3:
+      bucket: ${S3_BUCKET:skillup-uploads-local}
+  whatsapp:
+    api-url: ${WHATSAPP_API_URL:https://graph.facebook.com/v19.0}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+  fees:
+    reminder-days: [3, 5, 15]   # days after due date to send WhatsApp reminders
+  file:
+    max-size-mb: 10
+    max-files-per-submission: 3
+    allowed-types: [application/pdf, image/jpeg, image/png]

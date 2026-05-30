@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LOCAL DEVELOPMENT PROFILE
+# Run with: mvn spring-boot:run   (Spring Boot auto-detects application-local.yml
+#           when -Dspring-boot.run.profiles=local OR SPRING_PROFILES_ACTIVE=local)
+#
+# No JWT required — all endpoints open.
+# Pass X-Branch-ID: <uuid> header when testing branch-scoped endpoints.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true    # Pretty-print SQL in dev
+    show-sql: true
+
+  flyway:
+    enabled: true
+
+  # Disable Keycloak JWK fetching on local (no JWT needed)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+
+logging:
+  level:
+    com.skillup: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: INFO
+
+# Swagger is always accessible on local
+springdoc:
+  swagger-ui:
+    enabled: true

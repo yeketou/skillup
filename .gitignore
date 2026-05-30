@@ -1,0 +1,56 @@
+# ── Java / Maven ──────────────────────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+*.sublime-project
+*.sublime-workspace
+.vscode/settings.json
+.vscode/launch.json
+
+# ── Node / npm / Vite ─────────────────────────────────────────────────────────
+node_modules/
+dist/
+.parcel-cache/
+.vite/
+
+# ── Environment / Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+secrets/
+*.pem
+*.key
+*.p12
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Docker volumes ────────────────────────────────────────────────────────────
+docker-data/
+
+# ── Generated docs ────────────────────────────────────────────────────────────
+# Keep the Word doc in git (it's a deliverable)
+# SkillUp_Functional_Specification.docx  ← intentionally NOT ignored
