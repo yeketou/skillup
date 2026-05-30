@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillUp — Tuition Management System</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --primary-dark: #3730A3;
+    --accent: #06B6D4;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-500: #6B7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --sidebar-w: 240px;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-50); color: var(--gray-900); display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w); background: white; border-right: 1px solid var(--gray-200);
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+    box-shadow: 2px 0 8px rgba(0,0,0,.04);
+  }
+  .logo { padding: 18px 20px 14px; border-bottom: 1px solid var(--gray-100); }
+  .logo img { filter: drop-shadow(0 2px 6px rgba(99,102,241,0.25)); display: block; }
+  .logo-sub { font-size: 10px; color: #9CA3AF; margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.1px; padding-left: 2px; }
+  .nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer;
+    font-size: 13.5px; font-weight: 500; color: var(--gray-700); border-radius: 0;
+    transition: all .15s; position: relative; margin: 1px 0;
+  }
+  .nav-item:hover { background: var(--gray-50); color: var(--primary); }
+  .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .nav-item.active::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--primary); border-radius:0 2px 2px 0; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--gray-100); }
+  .user-chip { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .user-info { flex: 1; overflow: hidden; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .user-role { font-size: 11px; color: var(--gray-500); }
+
+  /* ── Main ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: white; border-bottom: 1px solid var(--gray-200); padding: 0 28px;
+    display: flex; align-items: center; gap: 16px; height: 60px; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 18px; font-weight: 700; color: var(--gray-900); flex: 1; }
+  .topbar-sub { font-size: 13px; color: var(--gray-500); margin-left: 8px; font-weight: 400; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-outline { background: white; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-warning { background: var(--warning); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .notif-btn { width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid var(--gray-200); background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; position: relative; }
+  .notif-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+
+  .content { padding: 28px; flex: 1; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: white; border-radius: 12px; border: 1px solid var(--gray-200); overflow: hidden; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+  .card-sub { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+  .card-body { padding: 20px; }
+
+  /* ── Stat Cards ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: 12px; border: 1px solid var(--gray-200); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stat-val { font-size: 28px; font-weight: 800; color: var(--gray-900); line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; }
+  .stat-change { font-size: 11px; font-weight: 600; }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+  td { padding: 13px 16px; font-size: 13px; color: var(--gray-700); border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray-50); }
+
+  /* ── Badges ── */
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-success { background: #D1FAE5; color: #065F46; }
+  .badge-warning { background: #FEF3C7; color: #92400E; }
+  .badge-danger { background: #FEE2E2; color: #991B1B; }
+  .badge-primary { background: var(--primary-light); color: var(--primary-dark); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-700); }
+
+  /* ── Grid layouts ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* ── Avatar + name combos ── */
+  .student-cell { display: flex; align-items: center; gap: 10px; }
+  .student-av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+
+  /* ── Quick action buttons ── */
+  .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .quick-btn { background: white; border: 1.5px solid var(--gray-200); border-radius: 12px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all .15s; text-decoration: none; }
+  .quick-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+  .quick-btn .q-icon { font-size: 24px; }
+  .quick-btn .q-label { font-size: 11.5px; font-weight: 600; color: var(--gray-700); text-align: center; }
+
+  /* ── Progress bars ── */
+  .progress-bar { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: var(--primary); }
+
+  /* ── Attendance grid ── */
+  .att-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .att-day { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .att-present { background: #D1FAE5; color: #065F46; }
+  .att-absent { background: #FEE2E2; color: #991B1B; }
+  .att-late { background: #FEF3C7; color: #92400E; }
+  .att-holiday { background: var(--gray-100); color: var(--gray-400); }
+  .att-future { background: white; border: 1px solid var(--gray-200); color: var(--gray-400); }
+
+  /* ── Fee status row ── */
+  .fee-bar { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+  .fee-bar:last-child { border-bottom: none; }
+  .fee-month { width: 80px; font-size: 13px; font-weight: 600; color: var(--gray-700); }
+  .fee-prog { flex: 1; }
+  .fee-amount { width: 80px; text-align: right; font-size: 13px; font-weight: 700; }
+
+  /* ── Timeline ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item { display: flex; gap: 14px; padding: 12px 0; position: relative; }
+  .tl-item:not(:last-child)::after { content:''; position:absolute; left: 15px; top: 40px; bottom: 0; width: 2px; background: var(--gray-200); }
+  .tl-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .tl-content { flex: 1; }
+  .tl-title { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .tl-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+  /* ── Timetable ── */
+  .timetable { display: grid; grid-template-columns: 60px repeat(5, 1fr); gap: 2px; }
+  .tt-header { background: var(--primary); color: white; padding: 8px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 6px; }
+  .tt-time { background: var(--gray-100); padding: 6px; text-align: center; font-size: 11px; color: var(--gray-500); font-weight: 600; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .tt-slot { border-radius: 6px; padding: 6px 8px; font-size: 11px; font-weight: 600; min-height: 50px; display: flex; flex-direction: column; justify-content: center; }
+  .tt-empty { background: var(--gray-50); border: 1px dashed var(--gray-200); }
+  .tt-class { color: white; }
+  .tt-math { background: #4F46E5; }
+  .tt-science { background: #0891B2; }
+  .tt-english { background: #059669; }
+  .tt-bm { background: #D97706; }
+  .tt-add-math { background: #7C3AED; }
+
+  /* ── Form fields ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+  .form-input { padding: 9px 12px; border: 1.5px solid var(--gray-300); border-radius: 8px; font-size: 13px; color: var(--gray-900); background: white; }
+  .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+  .form-select { padding: 9px 12px; border: 1.5px solid var(--gray-300); border-radius: 8px; font-size: 13px; color: var(--gray-900); background: white; width: 100%; cursor: pointer; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── Chart mockup ── */
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding: 0 4px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: all .3s; cursor: pointer; }
+  .chart-bar:hover { opacity: .8; }
+  .chart-label { font-size: 10px; color: var(--gray-500); font-weight: 600; }
+  .chart-val { font-size: 10px; color: var(--gray-700); font-weight: 700; }
+
+  /* ── Student profile ── */
+  .profile-hero { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 24px; border-radius: 12px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
+  .profile-av { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; border: 3px solid rgba(255,255,255,.4); }
+  .profile-name { font-size: 22px; font-weight: 800; }
+  .profile-meta { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .profile-chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .profile-chip { background: rgba(255,255,255,.2); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+  /* ── WhatsApp notification preview ── */
+  .wa-preview { background: #ECF8F1; border-radius: 12px; padding: 16px; border-left: 4px solid #25D366; }
+  .wa-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .wa-icon { font-size: 20px; }
+  .wa-title { font-size: 13px; font-weight: 700; color: #128C7E; }
+  .wa-msg { font-size: 13px; color: var(--gray-700); line-height: 1.6; }
+  .wa-time { font-size: 11px; color: var(--gray-500); text-align: right; margin-top: 8px; }
+
+  /* ── Report cards ── */
+  .report-subject { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+  .report-subject:last-child { border-bottom: none; }
+  .sub-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .sub-info { flex: 1; }
+  .sub-name { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .sub-teacher { font-size: 11px; color: var(--gray-500); }
+  .sub-grade { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .sub-mark { font-size: 11px; color: var(--gray-500); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+
+  /* Mobile toggle */
+  .mobile-toggle { display: none; }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .quick-actions { grid-template-columns: repeat(3,1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <img src="logo.svg" alt="SkillUp" height="40">
+    <div class="logo-sub">Tuition Management System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="show('dashboard',this)">
+      <span class="icon">🏠</span> Dashboard
+    </div>
+
+    <div class="nav-section">Academic</div>
+    <div class="nav-item" onclick="show('students',this)">
+      <span class="icon">👨‍🎓</span> Students
+    </div>
+    <div class="nav-item" onclick="show('classes',this)">
+      <span class="icon">📚</span> Classes
+    </div>
+    <div class="nav-item" onclick="show('attendance',this)">
+      <span class="icon">✅</span> Attendance
+    </div>
+    <div class="nav-item" onclick="show('assignments',this)">
+      <span class="icon">📝</span> Assignments
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="show('results',this)">
+      <span class="icon">📊</span> Results & Reports
+    </div>
+
+    <div class="nav-section">Finance</div>
+    <div class="nav-item" onclick="show('fees',this)">
+      <span class="icon">💳</span> Fees & Billing
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-item" onclick="show('communications',this)">
+      <span class="icon">💬</span> Communications
+    </div>
+
+    <div class="nav-section">Admin</div>
+    <div class="nav-item" onclick="show('timetable',this)">
+      <span class="icon">🗓️</span> Timetable
+    </div>
+    <div class="nav-item" onclick="show('profile',this)">
+      <span class="icon">👤</span> Student Profile
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">SR</div>
+      <div class="user-info">
+        <div class="user-name">Siti Rahimah</div>
+        <div class="user-role">Admin / Teacher</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<main class="main">
+
+<!-- ─── TOPBAR (dynamic) ─── -->
+<div class="topbar">
+  <div class="topbar-title" id="page-title">Dashboard <span class="topbar-sub">May 2026</span></div>
+  <div class="topbar-actions">
+    <div class="notif-btn">🔔<span class="notif-dot"></span></div>
+    <button class="btn btn-primary btn-sm" id="topbar-btn" onclick="topbarAction()">+ Add Student</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════ DASHBOARD ══════════════════════ -->
+<div class="screen active" id="screen-dashboard">
+  <!-- branded welcome banner -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 28px;background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);border-radius:16px;margin-bottom:24px;overflow:hidden;position:relative;">
+    <div style="position:absolute;top:-20px;right:180px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-30px;right:100px;width:160px;height:160px;background:rgba(255,255,255,.04);border-radius:50%;"></div>
+    <div style="position:relative;z-index:1;">
+      <div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:500;margin-bottom:4px;">Welcome back, Cikgu Rahimah 👋</div>
+      <div style="font-size:22px;font-weight:800;color:white;letter-spacing:-.3px;">Good morning! Here's today's overview.</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:5px;">Friday, 30 May 2026 &nbsp;·&nbsp; 6 classes scheduled &nbsp;·&nbsp; 5 outstanding fees</div>
+    </div>
+    <img src="logo.svg" alt="SkillUp" height="38" style="position:relative;z-index:1;filter:brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,.2));opacity:.92;">
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#EEF2FF;">👨‍🎓</div>
+      <div class="stat-val">148</div>
+      <div class="stat-label">Total Students</div>
+      <div class="stat-change up">↑ 12 this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#ECFDF5;">✅</div>
+      <div class="stat-val">91%</div>
+      <div class="stat-label">Avg Attendance</div>
+      <div class="stat-change up">↑ 2% vs last month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FEF3C7;">💳</div>
+      <div class="stat-val">RM 3,240</div>
+      <div class="stat-label">Outstanding Fees</div>
+      <div class="stat-change down">↑ 5 overdue students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#F0FDF4;">💰</div>
+      <div class="stat-val">RM 18,450</div>
+      <div class="stat-label">Revenue (May)</div>
+      <div class="stat-change up">↑ 8% vs April</div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <div class="quick-btn" onclick="show('attendance', document.querySelector('[onclick*=attendance]'))">
+      <span class="q-icon">✅</span><span class="q-label">Mark Attendance</span>
+    </div>
+    <div class="quick-btn" onclick="show('fees', document.querySelector('[onclick*=fees]'))">
+      <span class="q-icon">💳</span><span class="q-label">Record Payment</span>
+    </div>
+    <div class="quick-btn" onclick="show('students', document.querySelector('[onclick*=students]'))">
+      <span class="q-icon">👨‍🎓</span><span class="q-label">Add Student</span>
+    </div>
+    <div class="quick-btn" onclick="show('communications', document.querySelector('[onclick*=communications]'))">
+      <span class="q-icon">📲</span><span class="q-label">Send Reminder</span>
+    </div>
+    <div class="quick-btn" onclick="show('results', document.querySelector('[onclick*=results]'))">
+      <span class="q-icon">📊</span><span class="q-label">Monthly Report</span>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Monthly Revenue</div><div class="card-sub">Jan – May 2026</div></div>
+        <span class="badge badge-success">+8% MoM</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-bars">
+          <div class="chart-bar-wrap">
+            <div class="chart-val">14.2k</div>
+            <div class="chart-bar" style="height:65%;background:var(--primary);opacity:.5;"></div>
+            <div class="chart-label">Jan</div>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-val">15.8k</div>
+            <div class="chart-bar" style="height:72%;background:var(--primary);opacity:.6;"></div>
+            <div class="chart-label">Feb</div>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-val">16.1k</div>
+            <div class="chart-bar" style="height:74%;background:var(--primary);opacity:.7;"></div>
+            <div class="chart-label">Mar</div>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-val">17.1k</div>
+            <div class="chart-bar" style="height:81%;background:var(--primary);opacity:.85;"></div>
+            <div class="chart-label">Apr</div>
+          </div>
+          <div class="chart-bar-wrap">
+            <div class="chart-val">18.5k</div>
+            <div class="chart-bar" style="height:100%;background:var(--primary);"></div>
+            <div class="chart-label">May</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Today's Classes</div><div class="card-sub">Friday, 30 May 2026</div></div>
+        <span class="badge badge-primary">6 classes</span>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <table><tbody>
+          <tr><td><strong>8:00 AM</strong></td><td>Mathematics F4 <span class="badge badge-primary">Room A</span></td><td><span class="badge badge-success">In Progress</span></td></tr>
+          <tr><td><strong>10:00 AM</strong></td><td>Add Maths F5 <span class="badge badge-primary">Room B</span></td><td><span class="badge badge-warning">Starting Soon</span></td></tr>
+          <tr><td><strong>12:00 PM</strong></td><td>Science F3 <span class="badge badge-primary">Lab</span></td><td><span class="badge badge-gray">Upcoming</span></td></tr>
+          <tr><td><strong>2:00 PM</strong></td><td>English F2 <span class="badge badge-primary">Room A</span></td><td><span class="badge badge-gray">Upcoming</span></td></tr>
+          <tr><td><strong>4:00 PM</strong></td><td>BM F5 <span class="badge badge-primary">Room C</span></td><td><span class="badge badge-gray">Upcoming</span></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Outstanding Fees</div><div class="card-sub">Students with unpaid dues</div></div>
+        <button class="btn btn-outline btn-sm" onclick="show('fees',document.querySelector('[onclick*=fees]'))">View All</button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <tr><th>Student</th><th>Amount</th><th>Overdue</th><th></th></tr>
+          <tbody>
+            <tr>
+              <td><div class="student-cell"><div class="student-av" style="background:#4F46E5;">AH</div>Ahmad Hakimi</div></td>
+              <td><strong>RM 480</strong></td><td><span class="badge badge-danger">2 months</span></td>
+              <td><button class="btn btn-sm btn-warning">Remind</button></td>
+            </tr>
+            <tr>
+              <td><div class="student-cell"><div class="student-av" style="background:#06B6D4;">NS</div>Nur Syafiqah</div></td>
+              <td><strong>RM 240</strong></td><td><span class="badge badge-warning">1 month</span></td>
+              <td><button class="btn btn-sm btn-warning">Remind</button></td>
+            </tr>
+            <tr>
+              <td><div class="student-cell"><div class="student-av" style="background:#10B981;">KA</div>Khairul Anuar</div></td>
+              <td><strong>RM 360</strong></td><td><span class="badge badge-danger">2 months</span></td>
+              <td><button class="btn btn-sm btn-warning">Remind</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Recent Activity</div><div class="card-sub">Latest actions</div></div>
+      </div>
+      <div class="card-body">
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#D1FAE5;">✅</div>
+            <div class="tl-content">
+              <div class="tl-title">Attendance marked — Math F4</div>
+              <div class="tl-sub">28 present, 2 absent · 8:05 AM</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#FEF3C7;">💳</div>
+            <div class="tl-content">
+              <div class="tl-title">Payment received — Amirah Zahra</div>
+              <div class="tl-sub">RM 240 · May fees · 9:12 AM</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#EEF2FF;">📲</div>
+            <div class="tl-content">
+              <div class="tl-title">WhatsApp reminder sent</div>
+              <div class="tl-sub">5 parents notified for outstanding fees · 9:30 AM</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:#FEE2E2;">📝</div>
+            <div class="tl-content">
+              <div class="tl-title">New student enrolled — Darwisyah</div>
+              <div class="tl-sub">Form 4 · Maths & Science · 10:00 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STUDENTS ══════════════════════ -->
+<div class="screen" id="screen-students">
+  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
+    <input class="form-input" style="flex:1;max-width:300px;" placeholder="🔍  Search students…">
+    <select class="form-select" style="width:160px;">
+      <option>All Forms</option><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option><option>Form 5</option>
+    </select>
+    <select class="form-select" style="width:160px;">
+      <option>All Subjects</option><option>Mathematics</option><option>Science</option><option>English</option><option>BM</option>
+    </select>
+    <select class="form-select" style="width:140px;">
+      <option>All Status</option><option>Active</option><option>Inactive</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-title">Student Directory</div><div class="card-sub">148 students enrolled</div></div>
+      <button class="btn btn-primary btn-sm">+ Add Student</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Student</th><th>Form</th><th>Subjects</th><th>Attendance</th><th>Fees</th><th>Status</th><th></th></tr>
+        <tbody>
+          <tr>
+            <td><div class="student-cell"><div class="student-av" style="background:#4F46E5;">AM</div><div><div style="font-weight:600;">Amirah Mazlan</div><div style="font-size:11px;color:var(--gray-500);">ID #2401</div></div></div></td>
+            <td>Form 4</td>
+            <td><span class="badge badge-primary">Maths</span> <span class="badge badge-primary">Science</span></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:94%;background:var(--success);"></div></div><span style="font-size:12px;">94%</span></div></td>
+            <td><span class="badge badge-success">Paid</span></td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="show('profile',document.querySelector('[onclick*=profile]'))">View</button></td>
+          </tr>
+          <tr>
+            <td><div class="student-cell"><div class="student-av" style="background:#EF4444;">AH</div><div><div style="font-weight:600;">Ahmad Hakimi</div><div style="font-size:11px;color:var(--gray-500);">ID #2389</div></div></div></td>
+            <td>Form 5</td>
+            <td><span class="badge badge-primary">Add Maths</span> <span class="badge badge-primary">Physics</span></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:72%;background:var(--warning);"></div></div><span style="font-size:12px;">72%</span></div></td>
+            <td><span class="badge badge-danger">RM 480</span></td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><button class="btn btn-outline btn-sm">View</button></td>
+          </tr>
+          <tr>
+            <td><div class="student-cell"><div class="student-av" style="background:#06B6D4;">NS</div><div><div style="font-weight:600;">Nur Syafiqah</div><div style="font-size:11px;color:var(--gray-500);">ID #2401</div></div></div></td>
+            <td>Form 3</td>
+            <td><span class="badge badge-primary">BM</span> <span class="badge badge-primary">English</span></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:88%;background:var(--success);"></div></div><span style="font-size:12px;">88%</span></div></td>
+            <td><span class="badge badge-warning">RM 240</span></td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><button class="btn btn-outline btn-sm">View</button></td>
+          </tr>
+          <tr>
+            <td><div class="student-cell"><div class="student-av" style="background:#10B981;">DZ</div><div><div style="font-weight:600;">Darwisyah Zamri</div><div style="font-size:11px;color:var(--gray-500);">ID #2412</div></div></div></td>
+            <td>Form 4</td>
+            <td><span class="badge badge-primary">Maths</span> <span class="badge badge-primary">Science</span></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div><span style="font-size:12px;">100%</span></div></td>
+            <td><span class="badge badge-success">Paid</span></td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td><button class="btn btn-outline btn-sm">View</button></td>
+          </tr>
+          <tr>
+            <td><div class="student-cell"><div class="student-av" style="background:#7C3AED;">MR</div><div><div style="font-weight:600;">Muhammad Razif</div><div style="font-size:11px;color:var(--gray-500);">ID #2301</div></div></div></td>
+            <td>Form 5</td>
+            <td><span class="badge badge-primary">Add Maths</span></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:45%;background:var(--danger);"></div></div><span style="font-size:12px;">45%</span></div></td>
+            <td><span class="badge badge-success">Paid</span></td>
+            <td><span class="badge badge-danger">At Risk</span></td>
+            <td><button class="btn btn-outline btn-sm">View</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Student Panel -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><div class="card-title">Register New Student</div></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Student Info</div>
+          <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" placeholder="As per IC"></div>
+          <div class="form-group"><label class="form-label">IC Number</label><input class="form-input" placeholder="990101-01-1234"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Form</label><select class="form-select"><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option><option>Form 5</option></select></div>
+            <div class="form-group"><label class="form-label">School</label><input class="form-input" placeholder="School name"></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Parent / Guardian</div>
+          <div class="form-group"><label class="form-label">Parent Name</label><input class="form-input" placeholder="Full name"></div>
+          <div class="form-group"><label class="form-label">Phone (WhatsApp)</label><input class="form-input" placeholder="+60 12-345 6789"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" placeholder="parent@email.com"></div>
+          <div class="form-group"><label class="form-label">Relationship</label><select class="form-select"><option>Father</option><option>Mother</option><option>Guardian</option></select></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Enrollment</div>
+          <div class="form-group"><label class="form-label">Subjects</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--gray-300);border-radius:8px;">
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> Mathematics</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> Add Maths</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> Science</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> Physics</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> Chemistry</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> English</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox"> BM</label>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" type="date" value="2026-06-01"></div>
+          <div class="form-group"><label class="form-label">Fee Structure</label><select class="form-select"><option>Standard (RM120/subject)</option><option>Sibling Discount (-10%)</option><option>Custom</option></select></div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-primary" style="width:100%;">Register Student</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ATTENDANCE ══════════════════════ -->
+<div class="screen" id="screen-attendance">
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Mark Attendance</div><div class="card-sub">Mathematics Form 4 · 30 May 2026</div></div>
+        <div style="display:flex;gap:8px;">
+          <select class="form-select" style="width:180px;">
+            <option>Mathematics Form 4</option>
+            <option>Add Maths Form 5</option>
+            <option>Science Form 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>#</th><th>Student</th><th>Status</th><th>Note</th></tr>
+          <tbody id="att-table">
+            <tr><td>1</td><td><div class="student-cell"><div class="student-av" style="background:#4F46E5;">AM</div>Amirah Mazlan</div></td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm att-btn" onclick="setAtt(this,'P')">P</button><button class="btn btn-danger btn-sm att-btn" onclick="setAtt(this,'A')">A</button><button class="btn btn-warning btn-sm att-btn" onclick="setAtt(this,'L')">L</button></div></td><td><input class="form-input" style="padding:4px 8px;font-size:12px;" placeholder="—"></td></tr>
+            <tr><td>2</td><td><div class="student-cell"><div class="student-av" style="background:#06B6D4;">DZ</div>Darwisyah Zamri</div></td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm">P</button><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">A</button><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">L</button></div></td><td><input class="form-input" style="padding:4px 8px;font-size:12px;" placeholder="—"></td></tr>
+            <tr><td>3</td><td><div class="student-cell"><div class="student-av" style="background:#EF4444;">AH</div>Ahmad Hakimi</div></td><td><div style="display:flex;gap:6px;"><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">P</button><button class="btn btn-danger btn-sm">A</button><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">L</button></div></td><td><input class="form-input" style="padding:4px 8px;font-size:12px;" placeholder="Sakit"></td></tr>
+            <tr><td>4</td><td><div class="student-cell"><div class="student-av" style="background:#7C3AED;">MR</div>Muhammad Razif</div></td><td><div style="display:flex;gap:6px;"><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">P</button><button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);">A</button><button class="btn btn-warning btn-sm">L</button></div></td><td><input class="form-input" style="padding:4px 8px;font-size:12px;" placeholder="10 min late"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:16px;border-top:1px solid var(--gray-100);display:flex;gap:10px;">
+        <button class="btn btn-primary">Save Attendance</button>
+        <button class="btn btn-outline">📲 Notify Absent Parents</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">Monthly Overview — May 2026</div></div>
+        <div class="card-body">
+          <div style="display:flex;gap:16px;margin-bottom:16px;">
+            <div style="text-align:center;flex:1;"><div style="font-size:24px;font-weight:800;color:var(--success);">91%</div><div style="font-size:11px;color:var(--gray-500);">Avg Attendance</div></div>
+            <div style="text-align:center;flex:1;"><div style="font-size:24px;font-weight:800;color:var(--primary);">28</div><div style="font-size:11px;color:var(--gray-500);">Classes Held</div></div>
+            <div style="text-align:center;flex:1;"><div style="font-size:24px;font-weight:800;color:var(--danger);">3</div><div style="font-size:11px;color:var(--gray-500);">At Risk (<70%)</div></div>
+          </div>
+          <!-- Mini calendar -->
+          <div style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px;">MAY 2026 — Math F4</div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;margin-bottom:4px;">
+            <div style="font-size:10px;color:var(--gray-500);font-weight:700;">M</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">T</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">W</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">T</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">F</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">S</div><div style="font-size:10px;color:var(--gray-500);font-weight:700;">S</div>
+          </div>
+          <div class="att-grid">
+            <div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div><div class="att-day att-present">2</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div>
+            <div class="att-day att-holiday">—</div><div class="att-day att-present">6</div><div class="att-day att-holiday">—</div><div class="att-day att-present">8</div><div class="att-day att-present">9</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div>
+            <div class="att-day att-holiday">—</div><div class="att-day att-present">13</div><div class="att-day att-holiday">—</div><div class="att-day att-absent">15</div><div class="att-day att-present">16</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div>
+            <div class="att-day att-holiday">—</div><div class="att-day att-late">20</div><div class="att-day att-holiday">—</div><div class="att-day att-present">22</div><div class="att-day att-present">23</div><div class="att-day att-holiday">—</div><div class="att-day att-holiday">—</div>
+            <div class="att-day att-holiday">—</div><div class="att-day att-present">27</div><div class="att-day att-holiday">—</div><div class="att-day att-present">29</div><div class="att-day att-present">30</div><div class="att-day att-future">31</div><div class="att-day att-holiday">—</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;">
+            <span><span class="att-day att-present" style="display:inline-block;width:14px;height:14px;border-radius:3px;"></span> Present</span>
+            <span><span class="att-day att-absent" style="display:inline-block;width:14px;height:14px;border-radius:3px;"></span> Absent</span>
+            <span><span class="att-day att-late" style="display:inline-block;width:14px;height:14px;border-radius:3px;"></span> Late</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ FEES ══════════════════════ -->
+<div class="screen" id="screen-fees">
+  <div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#ECFDF5;">💰</div>
+      <div class="stat-val">RM 18,450</div>
+      <div class="stat-label">Collected (May)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FEE2E2;">⚠️</div>
+      <div class="stat-val">RM 3,240</div>
+      <div class="stat-label">Outstanding</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FEF3C7;">👥</div>
+      <div class="stat-val">5</div>
+      <div class="stat-label">Overdue Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#EEF2FF;">📧</div>
+      <div class="stat-val">18</div>
+      <div class="stat-label">Reminders Sent</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Fee Collection — May 2026</div><div class="card-sub">All students</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm">📲 Send All Reminders</button>
+          <button class="btn btn-primary btn-sm">+ Record Payment</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Student</th><th>Subject</th><th>Amount</th><th>Due</th><th>Status</th><th></th></tr>
+          <tbody>
+            <tr><td><div class="student-cell"><div class="student-av" style="background:#4F46E5;">AM</div>Amirah Mazlan</div></td><td>Maths + Science</td><td>RM 240</td><td>1 May</td><td><span class="badge badge-success">Paid 3/5</span></td><td><button class="btn btn-sm btn-outline">Receipt</button></td></tr>
+            <tr><td><div class="student-cell"><div class="student-av" style="background:#EF4444;">AH</div>Ahmad Hakimi</div></td><td>Add Maths + Physics</td><td>RM 480</td><td>1 Mar</td><td><span class="badge badge-danger">2 months overdue</span></td><td><button class="btn btn-sm btn-warning">Remind</button></td></tr>
+            <tr><td><div class="student-cell"><div class="student-av" style="background:#06B6D4;">NS</div>Nur Syafiqah</div></td><td>BM + English</td><td>RM 240</td><td>1 Apr</td><td><span class="badge badge-warning">1 month overdue</span></td><td><button class="btn btn-sm btn-warning">Remind</button></td></tr>
+            <tr><td><div class="student-cell"><div class="student-av" style="background:#10B981;">DZ</div>Darwisyah Zamri</div></td><td>Maths + Science</td><td>RM 240</td><td>1 May</td><td><span class="badge badge-success">Paid 30/5</span></td><td><button class="btn btn-sm btn-outline">Receipt</button></td></tr>
+            <tr><td><div class="student-cell"><div class="student-av" style="background:#7C3AED;">MR</div>Muhammad Razif</div></td><td>Add Maths</td><td>RM 120</td><td>1 May</td><td><span class="badge badge-success">Paid 5/5</span></td><td><button class="btn btn-sm btn-outline">Receipt</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">Fee Structures</div><div class="card-sub">Per subject / month</div></div>
+        <div class="card-body" style="padding:0;">
+          <div class="fee-bar" style="padding:14px 20px;">
+            <div class="fee-month">Mathematics</div>
+            <div class="fee-prog"><div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--primary);"></div></div></div>
+            <div class="fee-amount" style="color:var(--primary);">RM 120</div>
+          </div>
+          <div class="fee-bar" style="padding:14px 20px;">
+            <div class="fee-month">Add Maths</div>
+            <div class="fee-prog"><div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--accent);"></div></div></div>
+            <div class="fee-amount" style="color:var(--accent);">RM 120</div>
+          </div>
+          <div class="fee-bar" style="padding:14px 20px;">
+            <div class="fee-month">Science</div>
+            <div class="fee-prog"><div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div></div>
+            <div class="fee-amount" style="color:var(--success);">RM 120</div>
+          </div>
+          <div class="fee-bar" style="padding:14px 20px;">
+            <div class="fee-month">English</div>
+            <div class="fee-prog"><div class="progress-bar"><div class="progress-fill" style="width:83%;background:var(--warning);"></div></div></div>
+            <div class="fee-amount" style="color:var(--warning);">RM 100</div>
+          </div>
+          <div class="fee-bar" style="padding:14px 20px;">
+            <div class="fee-month">BM</div>
+            <div class="fee-prog"><div class="progress-bar"><div class="progress-fill" style="width:83%;background:var(--warning);"></div></div></div>
+            <div class="fee-amount" style="color:var(--warning);">RM 100</div>
+          </div>
+          <div style="padding:12px 20px;background:var(--gray-50);border-top:1px solid var(--gray-100);">
+            <div style="font-size:12px;color:var(--gray-500);">Sibling discount: <strong>10% off</strong> from 2nd child onwards</div>
+            <div style="font-size:12px;color:var(--gray-500);">Registration fee: <strong>RM 50</strong> one-time</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Receipt preview -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Receipt Preview</div></div>
+        <div class="card-body" style="text-align:center;">
+          <div style="border:1px dashed var(--gray-300);border-radius:8px;padding:20px;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px;">
+              <img src="favicon.svg" width="26" height="26" style="border-radius:6px;filter:drop-shadow(0 1px 3px rgba(99,102,241,.3));">
+              <span style="font-size:18px;font-weight:800;"><span style="color:#1E1B4B;">Skill</span><span style="color:#4F46E5;">Up</span></span>
+            </div>
+            <div style="font-size:11px;color:var(--gray-500);margin-bottom:16px;">Official Receipt</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--gray-500);">Receipt No.</span><span style="font-weight:600;">#RCP-2605-0042</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--gray-500);">Student</span><span style="font-weight:600;">Amirah Mazlan</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--gray-500);">Month</span><span style="font-weight:600;">May 2026</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--gray-500);">Maths</span><span>RM 120.00</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px;"><span style="color:var(--gray-500);">Science</span><span>RM 120.00</span></div>
+            <div style="border-top:1px solid var(--gray-200);padding-top:10px;display:flex;justify-content:space-between;font-size:14px;font-weight:800;"><span>Total</span><span style="color:var(--primary);">RM 240.00</span></div>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;">🖨️ Print / Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ RESULTS ══════════════════════ -->
+<div class="screen" id="screen-results">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Academic Results</div><div class="card-sub">Amirah Mazlan · Form 4 · May 2026</div></div>
+        <button class="btn btn-outline btn-sm">📥 Export PDF</button>
+      </div>
+      <div class="card-body" style="padding-bottom:0;">
+        <!-- Grade arc mockup -->
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-size:52px;font-weight:900;color:var(--primary);">A</div>
+          <div style="font-size:14px;color:var(--gray-500);">Overall Grade</div>
+          <div style="font-size:13px;font-weight:600;color:var(--success);">Average: 88.5%  ↑ 4.2% from last exam</div>
+        </div>
+        <div>
+          <div class="report-subject">
+            <div class="sub-icon" style="background:#EEF2FF;">📐</div>
+            <div class="sub-info"><div class="sub-name">Mathematics</div><div class="sub-teacher">Cikgu Rahimah</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:92%;"></div></div></div>
+            <div style="text-align:right;"><div class="sub-grade">A</div><div class="sub-mark">92 / 100</div></div>
+          </div>
+          <div class="report-subject">
+            <div class="sub-icon" style="background:#ECFDF5;">🔬</div>
+            <div class="sub-info"><div class="sub-name">Science</div><div class="sub-teacher">Cikgu Hafiz</div><div class="progress-bar" style="margin-top:5px;"><div class="progress-fill" style="width:85%;background:var(--success);"></div></div></div>
+            <div style="text-align:right;"><div class="sub-grade" style="color:var(--success);">A-</div><div class="sub-mark">85 / 100</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">Performance Trend</div><div class="card-sub">Last 5 exams</div></div>
+        <div class="card-body">
+          <div class="chart-bars">
+            <div class="chart-bar-wrap"><div class="chart-val">78%</div><div class="chart-bar" style="height:60%;background:var(--warning);"></div><div class="chart-label">Jan</div></div>
+            <div class="chart-bar-wrap"><div class="chart-val">82%</div><div class="chart-bar" style="height:72%;background:var(--warning);"></div><div class="chart-label">Feb</div></div>
+            <div class="chart-bar-wrap"><div class="chart-val">80%</div><div class="chart-bar" style="height:67%;background:var(--warning);"></div><div class="chart-label">Mar</div></div>
+            <div class="chart-bar-wrap"><div class="chart-val">85%</div><div class="chart-bar" style="height:80%;background:var(--success);"></div><div class="chart-label">Apr</div></div>
+            <div class="chart-bar-wrap"><div class="chart-val">89%</div><div class="chart-bar" style="height:100%;background:var(--primary);"></div><div class="chart-label">May</div></div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:var(--primary-light);border-radius:8px;font-size:12px;color:var(--primary-dark);">
+            📈 <strong>Improving trend!</strong> Student has improved by 11% over 5 months. Keep up the momentum.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Assignments</div><div class="card-sub">This month</div></div>
+        <div class="card-body" style="padding:0;">
+          <table>
+            <tr><th>Assignment</th><th>Due</th><th>Score</th><th>Status</th></tr>
+            <tr><td>Math Worksheet 5A</td><td>15 May</td><td>95/100</td><td><span class="badge badge-success">Submitted</span></td></tr>
+            <tr><td>Science Lab Report</td><td>20 May</td><td>88/100</td><td><span class="badge badge-success">Submitted</span></td></tr>
+            <tr><td>Math Test 5B</td><td>28 May</td><td>—</td><td><span class="badge badge-warning">Pending</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ COMMUNICATIONS ══════════════════════ -->
+<div class="screen" id="screen-communications">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">WhatsApp Notifications</div><div class="card-sub">Automated messaging system</div></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="wa-preview">
+            <div class="wa-header"><span class="wa-icon">📲</span><div class="wa-title">Fee Reminder Template</div></div>
+            <div class="wa-msg">
+              Salam Pn. Rohani 👋<br><br>
+              Ini peringatan yuran bulanan untuk <strong>Ahmad Hakimi</strong> bagi bulan <strong>April & Mei 2026</strong>.<br><br>
+              💳 Jumlah tertunggak: <strong>RM 480</strong><br>
+              📚 Subjek: Add Maths + Physics<br><br>
+              Sila buat pembayaran melalui:<br>
+              🏦 Maybank: 1234 5678 9012<br>
+              📱 DuitNow: 012-345 6789<br><br>
+              Terima kasih atas kerjasama tuan/puan. 🙏
+            </div>
+            <div class="wa-time">SkillUp Tuition · Automated</div>
+          </div>
+
+          <div class="wa-preview" style="border-left-color:#4F46E5;background:#EEF2FF;">
+            <div class="wa-header"><span class="wa-icon">❌</span><div class="wa-title" style="color:var(--primary);">Absence Notification Template</div></div>
+            <div class="wa-msg" style="color:var(--gray-700);">
+              Salam Pn. Rohani 👋<br><br>
+              Anak tuan/puan, <strong>Ahmad Hakimi</strong>, tidak hadir ke kelas <strong>Add Mathematics</strong> hari ini (30 Mei 2026).<br><br>
+              ⏰ Masa kelas: 10:00 AM – 12:00 PM<br><br>
+              Jika ada sebarang pertanyaan, sila hubungi kami.<br>
+              📞 Cikgu Rahimah: 011-2345 6789
+            </div>
+            <div class="wa-time">Sent automatically after class marked</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">Send Notification</div><div class="card-sub">Manual or bulk message</div></div>
+        <div class="card-body">
+          <div class="form-group"><label class="form-label">Recipients</label>
+            <select class="form-select"><option>All Parents</option><option>Parents with Outstanding Fees</option><option>Parents of Absent Students (Today)</option><option>Specific Student…</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Template</label>
+            <select class="form-select"><option>Fee Reminder</option><option>Absence Notification</option><option>Class Cancelled</option><option>Exam Result Ready</option><option>Custom Message</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Message Preview</label>
+            <textarea class="form-input" rows="5" style="resize:none;">Salam, ini peringatan yuran bulanan…</textarea>
+          </div>
+          <button class="btn btn-success" style="width:100%;">📲 Send via WhatsApp</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Notification Log</div><div class="card-sub">Last 7 days</div></div>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Type</th><th>Sent To</th><th>Date</th><th>Status</th></tr>
+            <tr><td>Fee Reminder</td><td>5 parents</td><td>30 May 9:30</td><td><span class="badge badge-success">Delivered</span></td></tr>
+            <tr><td>Absence Alert</td><td>2 parents</td><td>29 May 8:10</td><td><span class="badge badge-success">Delivered</span></td></tr>
+            <tr><td>Class Cancelled</td><td>All (Math F4)</td><td>26 May 7:00</td><td><span class="badge badge-success">Delivered</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TIMETABLE ══════════════════════ -->
+<div class="screen" id="screen-timetable">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div><div class="card-title">Weekly Timetable</div><div class="card-sub">Week of 26 May – 1 Jun 2026</div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm">◀ Prev</button>
+        <button class="btn btn-outline btn-sm">Next ▶</button>
+        <button class="btn btn-primary btn-sm">+ Add Class</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="timetable" style="gap:4px;">
+        <div></div>
+        <div class="tt-header">Mon 26</div>
+        <div class="tt-header">Tue 27</div>
+        <div class="tt-header">Wed 28</div>
+        <div class="tt-header">Thu 29</div>
+        <div class="tt-header">Fri 30</div>
+
+        <div class="tt-time">8 AM</div>
+        <div class="tt-slot tt-class tt-math"><div>Mathematics F4</div><div style="font-size:10px;opacity:.85;">Room A · 28 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-math"><div>Mathematics F4</div><div style="font-size:10px;opacity:.85;">Room A · 28 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-math"><div>Mathematics F4</div><div style="font-size:10px;opacity:.85;">Room A · 28 pax</div></div>
+
+        <div class="tt-time">10 AM</div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-add-math"><div>Add Maths F5</div><div style="font-size:10px;opacity:.85;">Room B · 20 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-add-math"><div>Add Maths F5</div><div style="font-size:10px;opacity:.85;">Room B · 20 pax</div></div>
+        <div class="tt-slot tt-class tt-add-math"><div>Add Maths F5</div><div style="font-size:10px;opacity:.85;">Room B · 20 pax</div></div>
+
+        <div class="tt-time">12 PM</div>
+        <div class="tt-slot tt-class tt-science"><div>Science F3</div><div style="font-size:10px;opacity:.85;">Lab · 25 pax</div></div>
+        <div class="tt-slot tt-class tt-science"><div>Science F3</div><div style="font-size:10px;opacity:.85;">Lab · 25 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-science"><div>Science F3</div><div style="font-size:10px;opacity:.85;">Lab · 25 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+
+        <div class="tt-time">2 PM</div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-english"><div>English F2</div><div style="font-size:10px;opacity:.85;">Room C · 22 pax</div></div>
+        <div class="tt-slot tt-class tt-english"><div>English F2</div><div style="font-size:10px;opacity:.85;">Room C · 22 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-english"><div>English F2</div><div style="font-size:10px;opacity:.85;">Room C · 22 pax</div></div>
+
+        <div class="tt-time">4 PM</div>
+        <div class="tt-slot tt-class tt-bm"><div>BM F5</div><div style="font-size:10px;opacity:.85;">Room A · 30 pax</div></div>
+        <div class="tt-slot tt-empty"></div>
+        <div class="tt-slot tt-class tt-bm"><div>BM F5</div><div style="font-size:10px;opacity:.85;">Room A · 30 pax</div></div>
+        <div class="tt-slot tt-class tt-bm"><div>BM F5</div><div style="font-size:10px;opacity:.85;">Room A · 30 pax</div></div>
+        <div class="tt-slot tt-class tt-bm"><div>BM F5</div><div style="font-size:10px;opacity:.85;">Room A · 30 pax</div></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:14px;height:14px;background:#4F46E5;border-radius:3px;display:inline-block;"></span>Mathematics</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:14px;height:14px;background:#7C3AED;border-radius:3px;display:inline-block;"></span>Add Maths</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:14px;height:14px;background:#0891B2;border-radius:3px;display:inline-block;"></span>Science</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:14px;height:14px;background:#059669;border-radius:3px;display:inline-block;"></span>English</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:14px;height:14px;background:#D97706;border-radius:3px;display:inline-block;"></span>BM</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ASSIGNMENTS ══════════════════════ -->
+<div class="screen" id="screen-assignments">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Assignments</div><div class="card-sub">All classes</div></div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <tr><th>Title</th><th>Class</th><th>Due</th><th>Submitted</th><th>Status</th><th></th></tr>
+          <tbody>
+            <tr><td><strong>Worksheet 5A</strong></td><td>Math F4</td><td>15 May</td><td>27/28</td><td><span class="badge badge-success">Closed</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+            <tr><td><strong>Lab Report Q3</strong></td><td>Science F3</td><td>20 May</td><td>24/25</td><td><span class="badge badge-success">Closed</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+            <tr><td><strong>Math Test 5B</strong></td><td>Math F4</td><td>28 May</td><td>12/28</td><td><span class="badge badge-warning">Open</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+            <tr><td><strong>Essay Writing</strong></td><td>English F2</td><td>2 Jun</td><td>0/22</td><td><span class="badge badge-primary">Upcoming</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+            <tr><td><strong>BM Karangan</strong></td><td>BM F5</td><td>5 Jun</td><td>0/30</td><td><span class="badge badge-primary">Upcoming</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Create Assignment</div></div>
+      <div class="card-body">
+        <div class="form-group"><label class="form-label">Assignment Title</label><input class="form-input" placeholder="e.g. Math Worksheet 6A"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Class</label><select class="form-select"><option>Math F4</option><option>Add Maths F5</option><option>Science F3</option></select></div>
+          <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Max Score</label><input class="form-input" placeholder="100"></div>
+        <div class="form-group"><label class="form-label">Description / Instructions</label><textarea class="form-input" rows="4" placeholder="Describe the assignment…" style="resize:none;"></textarea></div>
+        <div class="form-group"><label class="form-label">Notify Parents?</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" checked> Send WhatsApp reminder to parents when created</label>
+        </div>
+        <button class="btn btn-primary" style="width:100%;">Create Assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ CLASSES ══════════════════════ -->
+<div class="screen" id="screen-classes">
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:12px;align-items:center;">
+        <div style="width:50px;height:50px;background:#EEF2FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">📐</div>
+        <div><div style="font-weight:700;">Mathematics F4</div><div style="font-size:12px;color:var(--gray-500);">Mon / Wed / Fri 8 AM · Room A</div><div style="margin-top:4px;"><span class="badge badge-success">28 / 30 students</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:12px;align-items:center;">
+        <div style="width:50px;height:50px;background:#F5F3FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">📊</div>
+        <div><div style="font-weight:700;">Add Maths F5</div><div style="font-size:12px;color:var(--gray-500);">Tue / Thu / Fri 10 AM · Room B</div><div style="margin-top:4px;"><span class="badge badge-warning">20 / 20 students</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:12px;align-items:center;">
+        <div style="width:50px;height:50px;background:#ECFDF5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">🔬</div>
+        <div><div style="font-weight:700;">Science F3</div><div style="font-size:12px;color:var(--gray-500);">Mon / Tue / Thu 12 PM · Lab</div><div style="margin-top:4px;"><span class="badge badge-success">25 / 30 students</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:12px;align-items:center;">
+        <div style="width:50px;height:50px;background:#ECFDF5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">🇬🇧</div>
+        <div><div style="font-weight:700;">English F2</div><div style="font-size:12px;color:var(--gray-500);">Tue / Wed / Fri 2 PM · Room C</div><div style="margin-top:4px;"><span class="badge badge-success">22 / 30 students</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:12px;align-items:center;">
+        <div style="width:50px;height:50px;background:#FFFBEB;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">📖</div>
+        <div><div style="font-weight:700;">BM F5</div><div style="font-size:12px;color:var(--gray-500);">Mon / Wed / Thu / Fri 4 PM · Room A</div><div style="margin-top:4px;"><span class="badge badge-success">30 / 30 students</span></div></div>
+      </div>
+    </div>
+    <div class="card" style="border:2px dashed var(--gray-300);cursor:pointer;" onclick="">
+      <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-500);min-height:80px;">
+        <span style="font-size:24px;">+</span><span style="font-weight:600;">Add New Class</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Holiday & Replacement Class Schedule</div></div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Date</th><th>Type</th><th>Class Affected</th><th>Replacement Date</th><th>Status</th></tr>
+        <tr><td>1 Jun 2026</td><td><span class="badge badge-danger">Public Holiday</span></td><td>All classes</td><td>7 Jun 2026</td><td><span class="badge badge-warning">Pending Notify</span></td></tr>
+        <tr><td>15 Jun 2026</td><td><span class="badge badge-warning">Teacher Leave</span></td><td>Math F4</td><td>18 Jun 2026</td><td><span class="badge badge-success">Notified</span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STUDENT PROFILE ══════════════════════ -->
+<div class="screen" id="screen-profile">
+  <div class="profile-hero">
+    <div class="profile-av">AM</div>
+    <div>
+      <div class="profile-name">Amirah Mazlan</div>
+      <div class="profile-meta">Form 4 · SMK Taman Desa Jaya · Student ID #2401</div>
+      <div class="profile-chips">
+        <span class="profile-chip">✅ Active</span>
+        <span class="profile-chip">📚 Mathematics</span>
+        <span class="profile-chip">🔬 Science</span>
+        <span class="profile-chip">💳 Fees Paid</span>
+        <span class="profile-chip">📊 94% Attendance</span>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;flex-direction:column;gap:8px;">
+      <button class="btn" style="background:rgba(255,255,255,.2);color:white;border:1px solid rgba(255,255,255,.3);">📲 WhatsApp Parent</button>
+      <button class="btn" style="background:rgba(255,255,255,.2);color:white;border:1px solid rgba(255,255,255,.3);">📊 Full Report</button>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Personal Information</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">IC No.</span><span style="font-weight:600;">060115-10-1234</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Date of Birth</span><span style="font-weight:600;">15 Jan 2006</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">School</span><span style="font-weight:600;">SMK Taman Desa</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Enrolled</span><span style="font-weight:600;">Jan 2024</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Parent / Guardian</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Name</span><span style="font-weight:600;">Pn. Rohani Mazlan</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Relation</span><span style="font-weight:600;">Mother</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Phone</span><span style="font-weight:600;">012-345 6789</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">WhatsApp</span><span class="badge badge-success">Active</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Fee Summary</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Monthly Fee</span><span style="font-weight:600;">RM 240</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Discount</span><span style="font-weight:600;">None</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">May 2026</span><span class="badge badge-success">Paid ✓</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Total Paid</span><span style="font-weight:600;color:var(--success);">RM 3,360</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Attendance History</div><div class="card-sub">2026</div></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;font-size:12px;color:var(--gray-500);">Jan</div><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:96%;background:var(--success);"></div></div><div style="font-size:12px;font-weight:600;width:40px;">96%</div></div>
+          <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;font-size:12px;color:var(--gray-500);">Feb</div><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:88%;background:var(--success);"></div></div><div style="font-size:12px;font-weight:600;width:40px;">88%</div></div>
+          <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;font-size:12px;color:var(--gray-500);">Mar</div><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:92%;background:var(--success);"></div></div><div style="font-size:12px;font-weight:600;width:40px;">92%</div></div>
+          <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;font-size:12px;color:var(--gray-500);">Apr</div><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div><div style="font-size:12px;font-weight:600;width:40px;">100%</div></div>
+          <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;font-size:12px;color:var(--gray-500);">May</div><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:94%;background:var(--success);"></div></div><div style="font-size:12px;font-weight:600;width:40px;">94%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Academic Performance</div><div class="card-sub">Improvement tracking</div></div>
+      <div class="card-body">
+        <div class="chart-bars">
+          <div class="chart-bar-wrap"><div class="chart-val">78%</div><div class="chart-bar" style="height:60%;background:var(--warning);"></div><div class="chart-label">Jan</div></div>
+          <div class="chart-bar-wrap"><div class="chart-val">82%</div><div class="chart-bar" style="height:72%;background:var(--warning);"></div><div class="chart-label">Feb</div></div>
+          <div class="chart-bar-wrap"><div class="chart-val">80%</div><div class="chart-bar" style="height:66%;background:var(--warning);"></div><div class="chart-label">Mar</div></div>
+          <div class="chart-bar-wrap"><div class="chart-val">85%</div><div class="chart-bar" style="height:80%;background:var(--success);"></div><div class="chart-label">Apr</div></div>
+          <div class="chart-bar-wrap"><div class="chart-val">89%</div><div class="chart-bar" style="height:100%;background:var(--primary);"></div><div class="chart-label">May</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:12px;">
+          <div style="flex:1;padding:10px;background:var(--primary-light);border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--primary);">+11%</div><div style="font-size:11px;color:var(--gray-600);">Improvement</div></div>
+          <div style="flex:1;padding:10px;background:#ECFDF5;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--success);">A</div><div style="font-size:11px;color:var(--gray-600);">Current Grade</div></div>
+          <div style="flex:1;padding:10px;background:#FEF3C7;border-radius:8px;text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--warning);">📈</div><div style="font-size:11px;color:var(--gray-600);">Trending Up</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</main>
+
+<script>
+const pageConfig = {
+  dashboard:      { title: 'Dashboard <span class="topbar-sub">May 2026</span>', btn: '+ Add Student', action: () => show('students', document.querySelector('[onclick*=students]')) },
+  students:       { title: 'Students', btn: '+ Register Student', action: () => {} },
+  classes:        { title: 'Classes', btn: '+ New Class', action: () => {} },
+  attendance:     { title: 'Attendance', btn: '✅ Save Attendance', action: () => {} },
+  assignments:    { title: 'Assignments', btn: '+ New Assignment', action: () => {} },
+  results:        { title: 'Results & Reports', btn: '📥 Export Report', action: () => {} },
+  fees:           { title: 'Fees & Billing', btn: '+ Record Payment', action: () => {} },
+  communications: { title: 'Communications', btn: '📲 Send Message', action: () => {} },
+  timetable:      { title: 'Timetable', btn: '+ Add Class', action: () => {} },
+  profile:        { title: 'Student Profile', btn: '✏️ Edit Profile', action: () => {} },
+};
+
+function show(id, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  const cfg = pageConfig[id];
+  document.getElementById('page-title').innerHTML = cfg.title;
+  document.getElementById('topbar-btn').textContent = cfg.btn;
+}
+
+function topbarAction() {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  const id = active.id.replace('screen-','');
+  pageConfig[id]?.action();
+}
+</script>
+</body>
+</html>

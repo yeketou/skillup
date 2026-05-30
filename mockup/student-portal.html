@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillUp — Student Portal</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --primary:      #4F46E5;
+    --primary-mid:  #6366F1;
+    --primary-lite: #EEF2FF;
+    --purple:       #7C3AED;
+    --success:      #10B981;
+    --warning:      #F59E0B;
+    --danger:       #EF4444;
+    --gray-50:      #F9FAFB;
+    --gray-100:     #F3F4F6;
+    --gray-200:     #E5E7EB;
+    --gray-300:     #D1D5DB;
+    --gray-500:     #6B7280;
+    --gray-700:     #374151;
+    --gray-900:     #111827;
+    --navy:         #1E1B4B;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #E8EAF6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Screen switcher bar ── */
+  .switcher {
+    width: 100%; max-width: 960px;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; gap: 0;
+    position: sticky; top: 0; z-index: 200;
+    overflow-x: auto;
+  }
+  .sw-btn {
+    padding: 12px 18px; font-size: 12px; font-weight: 600; cursor: pointer;
+    color: var(--gray-500); border: none; background: none; white-space: nowrap;
+    border-bottom: 3px solid transparent; transition: all .15s;
+  }
+  .sw-btn:hover { color: var(--primary); }
+  .sw-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .sw-label { padding: 12px 14px 12px 20px; font-size: 11px; font-weight: 700;
+    color: var(--gray-400); text-transform: uppercase; letter-spacing: .8px;
+    display: flex; align-items: center; border-right: 1px solid var(--gray-100); }
+
+  /* ── Phone frame ── */
+  .stage {
+    width: 100%; max-width: 960px;
+    display: flex; gap: 32px; justify-content: center; align-items: flex-start;
+    padding: 32px 24px 40px;
+  }
+  .phone {
+    width: 390px; min-width: 390px;
+    background: white;
+    border-radius: 40px;
+    box-shadow: 0 24px 80px rgba(79,70,229,.18), 0 4px 20px rgba(0,0,0,.1);
+    overflow: hidden;
+    position: relative;
+    border: 8px solid #1a1a2e;
+  }
+  .phone-notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 28px; background: #1a1a2e; border-radius: 0 0 20px 20px; z-index: 99;
+  }
+  .phone-screen { height: 780px; overflow-y: auto; position: relative; background: var(--gray-50); }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  /* ── Screen visibility ── */
+  .screen { display: none; min-height: 780px; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ═══════════════════ LOGIN SCREEN ═══════════════════ */
+  .login-bg {
+    background: linear-gradient(155deg, var(--navy) 0%, #3730A3 35%, var(--purple) 70%, #6D28D9 100%);
+    flex: 0 0 260px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding: 48px 32px 36px;
+  }
+  .login-blob {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,.06);
+  }
+  .login-logo-wrap { text-align: center; z-index: 2; position: relative; margin-bottom: 8px; }
+  .login-logo-wrap img { filter: brightness(0) invert(1); }
+  .login-tagline { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 1.2px; margin-top: 6px; z-index: 2; position: relative; }
+
+  .login-card {
+    background: white; border-radius: 28px 28px 0 0;
+    padding: 30px 28px 40px; flex: 1;
+    box-shadow: 0 -4px 24px rgba(0,0,0,.08);
+  }
+  .login-tabs { display: flex; background: var(--gray-100); border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+  .login-tab {
+    flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 600;
+    border-radius: 9px; cursor: pointer; color: var(--gray-500); transition: all .2s;
+  }
+  .login-tab.active { background: white; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+  .login-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--gray-500); margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--gray-700); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+  .field-wrap { position: relative; }
+  .field-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .field input {
+    width: 100%; padding: 12px 14px 12px 42px;
+    border: 1.5px solid var(--gray-200); border-radius: 12px;
+    font-size: 14px; color: var(--gray-900); background: var(--gray-50);
+    transition: all .15s;
+  }
+  .field input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(79,70,229,.1); }
+  .field input::placeholder { color: var(--gray-300); }
+  .field-row { display: flex; justify-content: space-between; align-items: center; }
+  .remember { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-500); }
+  .forgot { font-size: 12px; color: var(--primary); font-weight: 600; cursor: pointer; }
+
+  .login-btn {
+    width: 100%; padding: 14px; background: var(--primary);
+    color: white; font-size: 15px; font-weight: 700; border: none;
+    border-radius: 14px; cursor: pointer; margin-top: 20px;
+    box-shadow: 0 4px 16px rgba(79,70,229,.35);
+    transition: all .2s;
+  }
+  .login-btn:hover { background: #3730A3; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.4); }
+
+  .divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--gray-200); }
+  .divider-text { font-size: 11px; color: var(--gray-400); font-weight: 600; }
+
+  .login-help { text-align: center; font-size: 12px; color: var(--gray-500); margin-top: 20px; }
+  .login-help a { color: var(--primary); font-weight: 600; cursor: pointer; }
+
+  /* ═══════════════════ APP HEADER ═══════════════════ */
+  .app-header {
+    background: linear-gradient(135deg, var(--primary), var(--purple));
+    padding: 44px 20px 20px; color: white; flex-shrink: 0;
+  }
+  .app-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .header-logo { width: 32px; height: 32px; background: rgba(255,255,255,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .header-logo img { filter: brightness(0) invert(1); }
+  .header-notif { width: 34px; height: 34px; background: rgba(255,255,255,.15); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; cursor: pointer; }
+  .notif-badge { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #FCD34D; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.5); }
+
+  .greeting-sm { font-size: 12px; opacity: .75; font-weight: 500; }
+  .greeting-lg { font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+
+  .student-av-wrap { display: flex; align-items: center; gap: 10px; }
+  .student-av-lg { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: white; border: 2px solid rgba(255,255,255,.4); }
+
+  .header-stats { display: flex; gap: 8px; margin-top: 4px; }
+  .hstat { background: rgba(255,255,255,.15); border-radius: 10px; padding: 8px 12px; flex: 1; text-align: center; backdrop-filter: blur(10px); }
+  .hstat-val { font-size: 18px; font-weight: 800; color: white; }
+  .hstat-lbl { font-size: 10px; color: rgba(255,255,255,.7); font-weight: 500; margin-top: 1px; }
+
+  /* ═══════════════════ COMMON CARD STYLES ═══════════════════ */
+  .section { padding: 18px 16px; }
+  .section-title { font-size: 13px; font-weight: 800; color: var(--gray-900); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .see-all { font-size: 11px; color: var(--primary); font-weight: 600; cursor: pointer; }
+
+  .card { background: white; border-radius: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 10px; overflow: hidden; }
+  .mini-card { background: white; border-radius: 14px; box-shadow: 0 1px 5px rgba(0,0,0,.06); padding: 14px; }
+
+  /* ═══════════════════ CLASS CARD ═══════════════════ */
+  .class-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .class-time-col { width: 54px; text-align: right; flex-shrink: 0; }
+  .class-time { font-size: 12px; font-weight: 700; color: var(--gray-700); }
+  .class-dur { font-size: 10px; color: var(--gray-400); }
+  .class-dot-col { display: flex; flex-direction: column; align-items: center; gap: 0; flex-shrink: 0; }
+  .class-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .class-line { width: 2px; flex: 1; background: var(--gray-200); min-height: 20px; }
+  .class-info { flex: 1; }
+  .class-name { font-size: 13.5px; font-weight: 700; color: var(--gray-900); }
+  .class-meta { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+  .class-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+  /* ═══════════════════ ATTENDANCE ═══════════════════ */
+  .att-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--gray-50); }
+  .att-row:last-child { border-bottom: none; }
+  .att-subject-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .att-info { flex: 1; }
+  .att-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .att-detail { font-size: 11px; color: var(--gray-500); margin-top: 1px; }
+  .att-pct { font-size: 15px; font-weight: 800; }
+  .att-prog-wrap { width: 60px; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .cal-head { font-size: 10px; font-weight: 700; color: var(--gray-400); text-align: center; padding: 2px 0; }
+  .cal-day { aspect-ratio:1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+  .cal-p { background: #D1FAE5; color: #065F46; }
+  .cal-a { background: #FEE2E2; color: #991B1B; }
+  .cal-l { background: #FEF3C7; color: #92400E; }
+  .cal-h { background: var(--gray-100); color: var(--gray-400); }
+  .cal-f { background: white; border: 1px solid var(--gray-200); color: var(--gray-300); }
+  .cal-today { background: var(--primary); color: white; }
+
+  /* ═══════════════════ ASSIGNMENTS ═══════════════════ */
+  .assign-card { padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; border-bottom: 1px solid var(--gray-50); }
+  .assign-card:last-child { border-bottom: none; }
+  .assign-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--gray-300); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .assign-check.done { background: var(--success); border-color: var(--success); color: white; font-size: 13px; }
+  .assign-info { flex: 1; }
+  .assign-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .assign-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+  .assign-due { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .assign-due.overdue { background: #FEE2E2; color: #991B1B; }
+  .assign-due.soon { background: #FEF3C7; color: #92400E; }
+  .assign-due.ok { background: #D1FAE5; color: #065F46; }
+  .assign-due.done-badge { background: var(--gray-100); color: var(--gray-500); text-decoration: line-through; }
+
+  /* ═══════════════════ FEES ═══════════════════ */
+  .fee-banner {
+    margin: 16px; border-radius: 16px; padding: 18px;
+    background: linear-gradient(135deg, #10B981, #059669); color: white;
+  }
+  .fee-banner.overdue { background: linear-gradient(135deg, #EF4444, #DC2626); }
+  .fee-banner.pending { background: linear-gradient(135deg, #F59E0B, #D97706); }
+  .fee-banner-label { font-size: 11px; opacity: .8; font-weight: 500; text-transform: uppercase; letter-spacing: .8px; }
+  .fee-banner-amount { font-size: 32px; font-weight: 900; letter-spacing: -1px; margin: 4px 0; }
+  .fee-banner-sub { font-size: 12px; opacity: .85; }
+  .pay-btn { display: inline-block; background: rgba(255,255,255,.25); color: white; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; border: 1.5px solid rgba(255,255,255,.4); }
+
+  .fee-history { padding: 0; }
+  .fee-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--gray-50); }
+  .fee-row:last-child { border-bottom: none; }
+  .fee-month-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 12px; flex-shrink: 0; }
+  .fee-info { flex: 1; }
+  .fee-month-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .fee-subjects { font-size: 11px; color: var(--gray-500); }
+  .fee-amount { font-size: 14px; font-weight: 800; }
+  .badge { display: inline-flex; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; }
+  .badge-success { background: #D1FAE5; color: #065F46; }
+  .badge-warning { background: #FEF3C7; color: #92400E; }
+  .badge-danger { background: #FEE2E2; color: #991B1B; }
+  .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+  .badge-primary { background: var(--primary-lite); color: var(--primary); }
+
+  /* ═══════════════════ PROFILE ═══════════════════ */
+  .profile-hero { background: linear-gradient(135deg, var(--primary), var(--purple)); padding: 54px 20px 28px; text-align: center; color: white; }
+  .profile-av { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; margin: 0 auto 12px; border: 3px solid rgba(255,255,255,.4); }
+  .profile-name { font-size: 20px; font-weight: 800; }
+  .profile-id { font-size: 12px; opacity: .75; margin-top: 3px; }
+  .profile-chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .p-chip { background: rgba(255,255,255,.2); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .profile-stat-row { display: flex; gap: 8px; padding: 16px; }
+  .pstat { flex: 1; background: white; border-radius: 14px; padding: 14px 10px; text-align: center; box-shadow: 0 1px 5px rgba(0,0,0,.06); }
+  .pstat-val { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .pstat-lbl { font-size: 10px; color: var(--gray-500); font-weight: 600; margin-top: 2px; }
+  .profile-row { display: flex; align-items: center; padding: 15px 16px; border-bottom: 1px solid var(--gray-50); }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; margin-right: 12px; flex-shrink: 0; }
+  .profile-row-info { flex: 1; }
+  .profile-row-label { font-size: 11px; color: var(--gray-500); font-weight: 600; }
+  .profile-row-value { font-size: 13.5px; font-weight: 700; color: var(--gray-900); margin-top: 1px; }
+  .profile-row-action { font-size: 16px; color: var(--gray-300); }
+
+  /* ═══════════════════ BOTTOM TAB BAR ═══════════════════ */
+  .tab-bar {
+    position: sticky; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid var(--gray-100);
+    display: flex; padding: 8px 0 12px; z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  }
+  .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+  .tab-icon { font-size: 20px; transition: transform .15s; }
+  .tab-item:hover .tab-icon { transform: translateY(-2px); }
+  .tab-label { font-size: 10px; font-weight: 600; color: var(--gray-400); }
+  .tab-item.active .tab-label { color: var(--primary); }
+  .tab-item.active .tab-icon { filter: none; }
+  .tab-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); margin-top: -2px; }
+
+  /* progress bar */
+  .pbar { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+  .pbar-fill { height: 100%; border-radius: 3px; }
+
+  /* info row */
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--gray-50); font-size: 13px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--gray-500); font-size: 12px; }
+  .info-value { font-weight: 700; color: var(--gray-900); }
+
+  /* sidebar panel (annotation) */
+  .sidebar-panel {
+    width: 280px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 16px;
+    padding-top: 8px;
+  }
+  .note-card { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06); border-left: 3px solid var(--primary); }
+  .note-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+  .note-item { font-size: 12px; color: var(--gray-700); padding: 4px 0; display: flex; gap: 6px; }
+  .note-item::before { content: "•"; color: var(--primary); }
+
+  .screen-label { background: white; border-radius: 14px; padding: 12px 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+  .screen-label h3 { font-size: 13px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+  .screen-label p { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+
+  /* scroll */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── Screen switcher ── -->
+<div class="switcher">
+  <div class="sw-label">SkillUp Student Portal</div>
+  <button class="sw-btn active" onclick="switchScreen('login',this)">🔐 Login</button>
+  <button class="sw-btn" onclick="switchScreen('home',this)">🏠 Home</button>
+  <button class="sw-btn" onclick="switchScreen('schedule',this)">📅 My Schedule</button>
+  <button class="sw-btn" onclick="switchScreen('attendance',this)">✅ Attendance</button>
+  <button class="sw-btn" onclick="switchScreen('assignments',this)">📝 Assignments</button>
+  <button class="sw-btn" onclick="switchScreen('fees',this)">💳 My Fees</button>
+  <button class="sw-btn" onclick="switchScreen('profile',this)">👤 Profile</button>
+</div>
+
+<div class="stage">
+
+  <!-- ── Phone frame ── -->
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen" id="phone-screen">
+
+      <!-- ════════════════ LOGIN ════════════════ -->
+      <div class="screen active" id="screen-login">
+        <div class="login-bg">
+          <!-- decorative blobs -->
+          <div class="login-blob" style="width:200px;height:200px;top:-60px;left:-60px;"></div>
+          <div class="login-blob" style="width:140px;height:140px;bottom:60px;right:-40px;"></div>
+          <div class="login-blob" style="width:80px;height:80px;top:40px;right:30px;opacity:.08;background:white;"></div>
+
+          <div class="login-logo-wrap">
+            <img src="logo.svg" alt="SkillUp" height="36">
+          </div>
+          <div class="login-tagline">Student &amp; Parent Portal</div>
+        </div>
+
+        <div class="login-card">
+          <div class="login-tabs">
+            <div class="login-tab active">Student</div>
+            <div class="login-tab">Parent / Guardian</div>
+          </div>
+
+          <div class="login-title">Welcome back! 👋</div>
+          <div class="login-sub">Login to your SkillUp account</div>
+
+          <div class="field">
+            <label>Student ID or Email</label>
+            <div class="field-wrap">
+              <span class="field-icon">📧</span>
+              <input type="text" placeholder="e.g. STU-2401 or email">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <div class="field-wrap">
+              <span class="field-icon">🔒</span>
+              <input type="password" placeholder="Enter your password" value="••••••••">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label class="remember">
+              <input type="checkbox" checked style="accent-color:var(--primary);">
+              Remember me
+            </label>
+            <span class="forgot">Forgot password?</span>
+          </div>
+
+          <button class="login-btn" onclick="switchScreen('home', document.querySelectorAll('.sw-btn')[1])">
+            Log In
+          </button>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">OR</div>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="login-help">
+            New student? <a>Contact your tuition centre</a><br style="margin-top:6px;">
+            to get your login credentials.
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ HOME ════════════════ -->
+      <div class="screen" id="screen-home">
+        <div class="app-header">
+          <div class="app-header-top">
+            <div class="header-logo">
+              <img src="favicon.svg" alt="" height="20">
+            </div>
+            <div class="student-av-wrap">
+              <div>
+                <div class="greeting-sm">Good morning ☀️</div>
+                <div class="greeting-lg">Hi, Amirah!</div>
+              </div>
+            </div>
+            <div class="header-notif">🔔<div class="notif-badge"></div></div>
+          </div>
+          <div class="header-stats">
+            <div class="hstat">
+              <div class="hstat-val">94%</div>
+              <div class="hstat-lbl">Attendance</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val">2</div>
+              <div class="hstat-lbl">Due Soon</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val">A</div>
+              <div class="hstat-lbl">Avg Grade</div>
+            </div>
+            <div class="hstat" style="background:rgba(252,211,77,.2);">
+              <div class="hstat-val" style="color:#FCD34D;">✓</div>
+              <div class="hstat-lbl">Fees Paid</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;padding-bottom:10px;">
+          <!-- Today's classes -->
+          <div class="section">
+            <div class="section-title">
+              Today's Classes <span style="font-size:11px;font-weight:600;color:var(--gray-400);">Fri, 30 May</span>
+              <span class="see-all" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])">View all →</span>
+            </div>
+            <div class="card">
+              <div class="class-card">
+                <div class="class-time-col"><div class="class-time">8:00</div><div class="class-dur">2 hrs</div></div>
+                <div class="class-dot-col"><div class="class-dot" style="background:#4F46E5;"></div><div class="class-line"></div></div>
+                <div class="class-info"><div class="class-name">Mathematics F4</div><div class="class-meta">Room A · Cikgu Rahimah</div></div>
+                <span class="badge badge-success">Live</span>
+              </div>
+              <div class="class-card">
+                <div class="class-time-col"><div class="class-time">10:00</div><div class="class-dur">2 hrs</div></div>
+                <div class="class-dot-col"><div class="class-dot" style="background:#7C3AED;"></div><div class="class-line"></div></div>
+                <div class="class-info"><div class="class-name">Add Mathematics</div><div class="class-meta">Room B · Cikgu Hafiz</div></div>
+                <span class="badge badge-warning">Soon</span>
+              </div>
+              <div class="class-card">
+                <div class="class-time-col"><div class="class-time">2:00</div><div class="class-dur">2 hrs</div></div>
+                <div class="class-dot-col"><div class="class-dot" style="background:#059669;"></div></div>
+                <div class="class-info"><div class="class-name">Science F4</div><div class="class-meta">Lab · Cikgu Salmah</div></div>
+                <span class="badge badge-gray">Upcoming</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming assignments -->
+          <div class="section" style="padding-top:0;">
+            <div class="section-title">
+              Assignments
+              <span class="see-all" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])">View all →</span>
+            </div>
+            <div class="card">
+              <div class="assign-card">
+                <div class="assign-check">⚠️</div>
+                <div class="assign-info"><div class="assign-title">Math Test 5B</div><div class="assign-sub">Mathematics · max 100 marks</div></div>
+                <span class="assign-due soon">Due 28 May</span>
+              </div>
+              <div class="assign-card">
+                <div class="assign-check done">✓</div>
+                <div class="assign-info"><div class="assign-title" style="text-decoration:line-through;color:var(--gray-400);">Lab Report Q3</div><div class="assign-sub">Science · Submitted 95/100</div></div>
+                <span class="assign-due done-badge">Done</span>
+              </div>
+              <div class="assign-card">
+                <div class="assign-check"></div>
+                <div class="assign-info"><div class="assign-title">Essay Writing</div><div class="assign-sub">English · due next week</div></div>
+                <span class="assign-due ok">2 Jun</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent notice -->
+          <div class="section" style="padding-top:0;">
+            <div class="section-title">Notice Board</div>
+            <div class="mini-card" style="border-left:3px solid #F59E0B;display:flex;gap:10px;">
+              <span style="font-size:20px;">📢</span>
+              <div><div style="font-size:13px;font-weight:700;color:var(--gray-900);">Class rescheduled</div><div style="font-size:12px;color:var(--gray-500);margin-top:2px;">Math class on 1 Jun moved to 7 Jun (Sat) due to public holiday.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-bar">
+          <div class="tab-item active" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])">
+            <span class="tab-icon">🏠</span><span class="tab-label" style="color:var(--primary);">Home</span><div class="tab-pip"></div>
+          </div>
+          <div class="tab-item" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])">
+            <span class="tab-icon">📅</span><span class="tab-label">Schedule</span>
+          </div>
+          <div class="tab-item" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])">
+            <span class="tab-icon">✅</span><span class="tab-label">Attend.</span>
+          </div>
+          <div class="tab-item" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])">
+            <span class="tab-icon">📝</span><span class="tab-label">Tasks</span>
+          </div>
+          <div class="tab-item" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])">
+            <span class="tab-icon">💳</span><span class="tab-label">Fees</span>
+          </div>
+          <div class="tab-item" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])">
+            <span class="tab-icon">👤</span><span class="tab-label">Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ SCHEDULE ════════════════ -->
+      <div class="screen" id="screen-schedule">
+        <div class="app-header" style="padding-bottom:16px;">
+          <div style="height:28px;"></div>
+          <div style="font-size:18px;font-weight:800;margin-bottom:2px;">My Schedule</div>
+          <div style="font-size:12px;opacity:.75;">Week of 30 May – 5 Jun 2026</div>
+          <div style="display:flex;gap:6px;margin-top:14px;overflow-x:auto;padding-bottom:4px;">
+            <div style="background:rgba(255,255,255,.25);padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;">
+              <div style="font-size:10px;opacity:.75;">MON</div><div style="font-size:16px;font-weight:800;">26</div>
+            </div>
+            <div style="background:rgba(255,255,255,.25);padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;">
+              <div style="font-size:10px;opacity:.75;">TUE</div><div style="font-size:16px;font-weight:800;">27</div>
+            </div>
+            <div style="background:rgba(255,255,255,.25);padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;">
+              <div style="font-size:10px;opacity:.75;">WED</div><div style="font-size:16px;font-weight:800;">28</div>
+            </div>
+            <div style="background:rgba(255,255,255,.25);padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;">
+              <div style="font-size:10px;opacity:.75;">THU</div><div style="font-size:16px;font-weight:800;">29</div>
+            </div>
+            <div style="background:white;padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+              <div style="font-size:10px;color:var(--primary);font-weight:700;">FRI</div><div style="font-size:16px;font-weight:800;color:var(--primary);">30</div>
+            </div>
+            <div style="background:rgba(255,255,255,.12);padding:8px 14px;border-radius:12px;text-align:center;min-width:52px;opacity:.6;">
+              <div style="font-size:10px;opacity:.75;">SAT</div><div style="font-size:16px;font-weight:800;">31</div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px;">
+          <!-- timeline for Friday -->
+          <div style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;">Friday, 30 May 2026</div>
+
+          <div style="position:relative;padding-left:60px;">
+            <div style="position:absolute;left:38px;top:0;bottom:0;width:2px;background:var(--gray-200);"></div>
+
+            <!-- class 1 -->
+            <div style="position:relative;margin-bottom:16px;">
+              <div style="position:absolute;left:-26px;top:14px;width:10px;height:10px;border-radius:50%;background:#4F46E5;border:2px solid white;box-shadow:0 0 0 3px rgba(79,70,229,.2);"></div>
+              <div style="position:absolute;left:-46px;top:10px;font-size:10px;font-weight:700;color:var(--gray-500);">8 AM</div>
+              <div class="mini-card" style="border-left:4px solid #4F46E5;padding:14px 16px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:14px;font-weight:800;color:var(--gray-900);">Mathematics F4</div>
+                    <div style="font-size:11px;color:var(--gray-500);margin-top:3px;">📍 Room A &nbsp;·&nbsp; 👩‍🏫 Cikgu Rahimah</div>
+                    <div style="font-size:11px;color:var(--gray-500);">⏱ 8:00 AM – 10:00 AM</div>
+                  </div>
+                  <span class="badge badge-success">In Progress</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- class 2 -->
+            <div style="position:relative;margin-bottom:16px;">
+              <div style="position:absolute;left:-26px;top:14px;width:10px;height:10px;border-radius:50%;background:#7C3AED;border:2px solid white;box-shadow:0 0 0 3px rgba(124,58,237,.2);"></div>
+              <div style="position:absolute;left:-46px;top:10px;font-size:10px;font-weight:700;color:var(--gray-500);">10 AM</div>
+              <div class="mini-card" style="border-left:4px solid #7C3AED;padding:14px 16px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:14px;font-weight:800;color:var(--gray-900);">Add Mathematics</div>
+                    <div style="font-size:11px;color:var(--gray-500);margin-top:3px;">📍 Room B &nbsp;·&nbsp; 👨‍🏫 Cikgu Hafiz</div>
+                    <div style="font-size:11px;color:var(--gray-500);">⏱ 10:00 AM – 12:00 PM</div>
+                  </div>
+                  <span class="badge badge-warning">Starts 2h</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- lunch -->
+            <div style="position:relative;margin-bottom:16px;">
+              <div style="position:absolute;left:-46px;top:10px;font-size:10px;font-weight:700;color:var(--gray-400);">12 PM</div>
+              <div style="font-size:12px;color:var(--gray-400);font-style:italic;padding:10px 0;">☕ Lunch break</div>
+            </div>
+
+            <!-- class 3 -->
+            <div style="position:relative;margin-bottom:16px;">
+              <div style="position:absolute;left:-26px;top:14px;width:10px;height:10px;border-radius:50%;background:#059669;border:2px solid white;box-shadow:0 0 0 3px rgba(5,150,105,.2);"></div>
+              <div style="position:absolute;left:-46px;top:10px;font-size:10px;font-weight:700;color:var(--gray-500);">2 PM</div>
+              <div class="mini-card" style="border-left:4px solid #059669;padding:14px 16px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                  <div>
+                    <div style="font-size:14px;font-weight:800;color:var(--gray-900);">Science F4</div>
+                    <div style="font-size:11px;color:var(--gray-500);margin-top:3px;">📍 Science Lab &nbsp;·&nbsp; 👩‍🏫 Cikgu Salmah</div>
+                    <div style="font-size:11px;color:var(--gray-500);">⏱ 2:00 PM – 4:00 PM</div>
+                  </div>
+                  <span class="badge badge-gray">4h later</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- notice -->
+          <div class="mini-card" style="background:#FEF3C7;border-left:3px solid #F59E0B;">
+            <div style="font-size:12px;font-weight:700;color:#92400E;">⚠️ Class change</div>
+            <div style="font-size:11px;color:#92400E;margin-top:3px;">Math on 1 Jun rescheduled → 7 Jun (replacement class)</div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+          <div class="tab-item active" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])"><span class="tab-icon">📅</span><span class="tab-label" style="color:var(--primary);">Schedule</span><div class="tab-pip"></div></div>
+          <div class="tab-item" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])"><span class="tab-icon">✅</span><span class="tab-label">Attend.</span></div>
+          <div class="tab-item" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])"><span class="tab-icon">📝</span><span class="tab-label">Tasks</span></div>
+          <div class="tab-item" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])"><span class="tab-icon">💳</span><span class="tab-label">Fees</span></div>
+          <div class="tab-item" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></div>
+        </div>
+      </div>
+
+      <!-- ════════════════ ATTENDANCE ════════════════ -->
+      <div class="screen" id="screen-attendance">
+        <div class="app-header" style="padding-bottom:18px;">
+          <div style="height:28px;"></div>
+          <div style="font-size:18px;font-weight:800;margin-bottom:12px;">My Attendance</div>
+          <div style="display:flex;gap:8px;">
+            <div class="hstat" style="flex:1;"><div class="hstat-val">94%</div><div class="hstat-lbl">Overall</div></div>
+            <div class="hstat" style="flex:1;"><div class="hstat-val">2</div><div class="hstat-lbl">Absences</div></div>
+            <div class="hstat" style="flex:1;"><div class="hstat-val">1</div><div class="hstat-lbl">Late</div></div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;">
+
+          <!-- calendar -->
+          <div class="section">
+            <div class="section-title">May 2026 — All Subjects</div>
+            <div class="card" style="padding:14px;">
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;">
+                <div class="cal-head">M</div><div class="cal-head">T</div><div class="cal-head">W</div>
+                <div class="cal-head">T</div><div class="cal-head">F</div><div class="cal-head">S</div><div class="cal-head">S</div>
+              </div>
+              <div class="cal-grid">
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div>
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-p">2</div><div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div>
+
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-p">6</div><div class="cal-day cal-h">—</div>
+                <div class="cal-day cal-p">8</div><div class="cal-day cal-p">9</div><div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div>
+
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-p">13</div><div class="cal-day cal-h">—</div>
+                <div class="cal-day cal-a">15</div><div class="cal-day cal-p">16</div><div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div>
+
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-l">20</div><div class="cal-day cal-h">—</div>
+                <div class="cal-day cal-p">22</div><div class="cal-day cal-p">23</div><div class="cal-day cal-h">—</div><div class="cal-day cal-h">—</div>
+
+                <div class="cal-day cal-h">—</div><div class="cal-day cal-p">27</div><div class="cal-day cal-h">—</div>
+                <div class="cal-day cal-p">29</div><div class="cal-day cal-today">30</div><div class="cal-day cal-f">31</div><div class="cal-day cal-h">—</div>
+              </div>
+              <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;">
+                <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span class="cal-day cal-p" style="width:16px;height:16px;font-size:0;">.</span>Present</span>
+                <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span class="cal-day cal-a" style="width:16px;height:16px;font-size:0;">.</span>Absent</span>
+                <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span class="cal-day cal-l" style="width:16px;height:16px;font-size:0;">.</span>Late</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- by subject -->
+          <div class="section" style="padding-top:0;">
+            <div class="section-title">By Subject</div>
+            <div class="card">
+              <div class="att-row">
+                <div class="att-subject-icon" style="background:#EEF2FF;">📐</div>
+                <div class="att-info">
+                  <div class="att-name">Mathematics</div>
+                  <div class="att-detail">12/13 classes attended</div>
+                  <div class="pbar" style="margin-top:6px;"><div class="pbar-fill" style="width:92%;background:#4F46E5;"></div></div>
+                </div>
+                <div class="att-pct" style="color:#4F46E5;">92%</div>
+              </div>
+              <div class="att-row">
+                <div class="att-subject-icon" style="background:#F5F3FF;">📊</div>
+                <div class="att-info">
+                  <div class="att-name">Add Mathematics</div>
+                  <div class="att-detail">11/13 classes attended</div>
+                  <div class="pbar" style="margin-top:6px;"><div class="pbar-fill" style="width:85%;background:#7C3AED;"></div></div>
+                </div>
+                <div class="att-pct" style="color:#7C3AED;">85%</div>
+              </div>
+              <div class="att-row">
+                <div class="att-subject-icon" style="background:#ECFDF5;">🔬</div>
+                <div class="att-info">
+                  <div class="att-name">Science</div>
+                  <div class="att-detail">13/13 classes attended</div>
+                  <div class="pbar" style="margin-top:6px;"><div class="pbar-fill" style="width:100%;background:#059669;"></div></div>
+                </div>
+                <div class="att-pct" style="color:#059669;">100%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+          <div class="tab-item" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])"><span class="tab-icon">📅</span><span class="tab-label">Schedule</span></div>
+          <div class="tab-item active" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])"><span class="tab-icon">✅</span><span class="tab-label" style="color:var(--primary);">Attend.</span><div class="tab-pip"></div></div>
+          <div class="tab-item" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])"><span class="tab-icon">📝</span><span class="tab-label">Tasks</span></div>
+          <div class="tab-item" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])"><span class="tab-icon">💳</span><span class="tab-label">Fees</span></div>
+          <div class="tab-item" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></div>
+        </div>
+      </div>
+
+      <!-- ════════════════ ASSIGNMENTS ════════════════ -->
+      <div class="screen" id="screen-assignments">
+        <div class="app-header" style="padding-bottom:16px;">
+          <div style="height:28px;"></div>
+          <div style="font-size:18px;font-weight:800;">Assignments</div>
+          <div style="font-size:12px;opacity:.75;margin-top:2px;">3 pending · 2 submitted</div>
+          <div style="display:flex;gap:6px;margin-top:12px;">
+            <div style="background:white;color:var(--primary);padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">All</div>
+            <div style="background:rgba(255,255,255,.2);color:white;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">Pending</div>
+            <div style="background:rgba(255,255,255,.2);color:white;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">Submitted</div>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px;">
+          <!-- overdue -->
+          <div style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">⚠ Overdue</div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="assign-card">
+              <div class="assign-check" style="border-color:var(--danger);">❗</div>
+              <div class="assign-info"><div class="assign-title">Math Test 5B</div><div class="assign-sub">Mathematics · 100 marks · Cikgu Rahimah</div><div style="font-size:11px;color:var(--gray-400);margin-top:3px;">Expected to bring to class on 28 May</div></div>
+              <span class="assign-due overdue">28 May</span>
+            </div>
+          </div>
+
+          <!-- upcoming -->
+          <div style="font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📋 Upcoming</div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="assign-card">
+              <div class="assign-check"></div>
+              <div class="assign-info"><div class="assign-title">Essay Writing</div><div class="assign-sub">English · min 500 words · Cikgu Aisyah</div></div>
+              <span class="assign-due ok">2 Jun</span>
+            </div>
+            <div class="assign-card">
+              <div class="assign-check"></div>
+              <div class="assign-info"><div class="assign-title">BM Karangan</div><div class="assign-sub">Bahasa Malaysia · 350 words · Cikgu Zain</div></div>
+              <span class="assign-due ok">5 Jun</span>
+            </div>
+          </div>
+
+          <!-- submitted -->
+          <div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">✅ Submitted</div>
+          <div class="card">
+            <div class="assign-card">
+              <div class="assign-check done">✓</div>
+              <div class="assign-info"><div class="assign-title" style="color:var(--gray-500);">Worksheet 5A</div><div class="assign-sub">Mathematics · Score: 95/100</div></div>
+              <span class="assign-due done-badge">Graded</span>
+            </div>
+            <div class="assign-card">
+              <div class="assign-check done">✓</div>
+              <div class="assign-info"><div class="assign-title" style="color:var(--gray-500);">Lab Report Q3</div><div class="assign-sub">Science · Score: 88/100</div></div>
+              <span class="assign-due done-badge">Graded</span>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+          <div class="tab-item" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])"><span class="tab-icon">📅</span><span class="tab-label">Schedule</span></div>
+          <div class="tab-item" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])"><span class="tab-icon">✅</span><span class="tab-label">Attend.</span></div>
+          <div class="tab-item active" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])"><span class="tab-icon">📝</span><span class="tab-label" style="color:var(--primary);">Tasks</span><div class="tab-pip"></div></div>
+          <div class="tab-item" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])"><span class="tab-icon">💳</span><span class="tab-label">Fees</span></div>
+          <div class="tab-item" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></div>
+        </div>
+      </div>
+
+      <!-- ════════════════ FEES ════════════════ -->
+      <div class="screen" id="screen-fees">
+        <div class="app-header" style="padding-bottom:16px;">
+          <div style="height:28px;"></div>
+          <div style="font-size:18px;font-weight:800;">My Fees</div>
+          <div style="font-size:12px;opacity:.75;margin-top:2px;">Mathematics + Science · RM 240 / month</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;">
+          <!-- current month banner -->
+          <div class="fee-banner">
+            <div class="fee-banner-label">May 2026 — Status</div>
+            <div class="fee-banner-amount">RM 240.00</div>
+            <div class="fee-banner-sub">Mathematics + Science &nbsp;·&nbsp; Paid on 3 May 2026</div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.25);padding:6px 14px;border-radius:10px;margin-top:10px;">
+              <span style="font-size:14px;">✅</span>
+              <span style="font-size:12px;font-weight:700;color:white;">Fully Paid</span>
+            </div>
+          </div>
+
+          <!-- next month -->
+          <div style="margin:0 16px 16px;">
+            <div class="mini-card" style="border-left:3px solid var(--warning);display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#92400E;">June 2026</div>
+                <div style="font-size:11px;color:var(--gray-500);">Due by 1 Jun 2026</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:18px;font-weight:800;color:var(--gray-900);">RM 240</div>
+                <span class="badge badge-warning">Not yet due</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- payment history -->
+          <div class="section" style="padding-top:0;">
+            <div class="section-title">Payment History</div>
+            <div class="card fee-history">
+              <div class="fee-row">
+                <div class="fee-month-icon">📅</div>
+                <div class="fee-info"><div class="fee-month-name">May 2026</div><div class="fee-subjects">Maths + Science</div></div>
+                <div style="text-align:right;"><div class="fee-amount" style="color:var(--success);">RM 240</div><span class="badge badge-success">Paid</span></div>
+              </div>
+              <div class="fee-row">
+                <div class="fee-month-icon">📅</div>
+                <div class="fee-info"><div class="fee-month-name">April 2026</div><div class="fee-subjects">Maths + Science</div></div>
+                <div style="text-align:right;"><div class="fee-amount" style="color:var(--success);">RM 240</div><span class="badge badge-success">Paid</span></div>
+              </div>
+              <div class="fee-row">
+                <div class="fee-month-icon">📅</div>
+                <div class="fee-info"><div class="fee-month-name">March 2026</div><div class="fee-subjects">Maths + Science</div></div>
+                <div style="text-align:right;"><div class="fee-amount" style="color:var(--success);">RM 240</div><span class="badge badge-success">Paid</span></div>
+              </div>
+              <div class="fee-row">
+                <div class="fee-month-icon">📅</div>
+                <div class="fee-info"><div class="fee-month-name">February 2026</div><div class="fee-subjects">Maths + Science</div></div>
+                <div style="text-align:right;"><div class="fee-amount" style="color:var(--success);">RM 240</div><span class="badge badge-success">Paid</span></div>
+              </div>
+              <div class="fee-row">
+                <div class="fee-month-icon">📅</div>
+                <div class="fee-info"><div class="fee-month-name">January 2026</div><div class="fee-subjects">Maths + Science</div></div>
+                <div style="text-align:right;"><div class="fee-amount" style="color:var(--success);">RM 240</div><span class="badge badge-success">Paid</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- receipt button -->
+          <div style="padding:0 16px 20px;">
+            <button style="width:100%;padding:13px;background:var(--primary-lite);color:var(--primary);font-size:13px;font-weight:700;border:none;border-radius:14px;cursor:pointer;">🧾 Download Latest Receipt</button>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+          <div class="tab-item" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])"><span class="tab-icon">📅</span><span class="tab-label">Schedule</span></div>
+          <div class="tab-item" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])"><span class="tab-icon">✅</span><span class="tab-label">Attend.</span></div>
+          <div class="tab-item" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])"><span class="tab-icon">📝</span><span class="tab-label">Tasks</span></div>
+          <div class="tab-item active" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])"><span class="tab-icon">💳</span><span class="tab-label" style="color:var(--primary);">Fees</span><div class="tab-pip"></div></div>
+          <div class="tab-item" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></div>
+        </div>
+      </div>
+
+      <!-- ════════════════ PROFILE ════════════════ -->
+      <div class="screen" id="screen-profile">
+        <div class="profile-hero">
+          <div class="profile-av">AM</div>
+          <div class="profile-name">Amirah Mazlan</div>
+          <div class="profile-id">Student ID: STU-2401 &nbsp;·&nbsp; Form 4</div>
+          <div class="profile-chips">
+            <span class="p-chip">📐 Mathematics</span>
+            <span class="p-chip">📊 Add Maths</span>
+            <span class="p-chip">🔬 Science</span>
+          </div>
+        </div>
+        <div class="profile-stat-row">
+          <div class="pstat"><div class="pstat-val">94%</div><div class="pstat-lbl">Attendance</div></div>
+          <div class="pstat"><div class="pstat-val" style="color:var(--success);">A</div><div class="pstat-lbl">Avg Grade</div></div>
+          <div class="pstat"><div class="pstat-val">2</div><div class="pstat-lbl">Pending</div></div>
+          <div class="pstat"><div class="pstat-val" style="color:var(--success);">✓</div><div class="pstat-lbl">Fees</div></div>
+        </div>
+        <div style="flex:1;overflow-y:auto;">
+          <div class="section" style="padding-top:4px;">
+            <div class="section-title">Personal Details</div>
+            <div class="card">
+              <div class="profile-row">
+                <div class="profile-row-icon" style="background:#EEF2FF;">🏫</div>
+                <div class="profile-row-info"><div class="profile-row-label">School</div><div class="profile-row-value">SMK Taman Desa Jaya</div></div>
+                <div class="profile-row-action">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon" style="background:#ECFDF5;">📱</div>
+                <div class="profile-row-info"><div class="profile-row-label">Parent Contact</div><div class="profile-row-value">Pn. Rohani · 012-345 6789</div></div>
+                <div class="profile-row-action">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon" style="background:#FEF3C7;">📅</div>
+                <div class="profile-row-info"><div class="profile-row-label">Enrolled Since</div><div class="profile-row-value">January 2024</div></div>
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-top:16px;">Account</div>
+            <div class="card">
+              <div class="profile-row">
+                <div class="profile-row-icon" style="background:#EEF2FF;">🔒</div>
+                <div class="profile-row-info"><div class="profile-row-label">Change Password</div><div class="profile-row-value">Last changed 3 months ago</div></div>
+                <div class="profile-row-action">›</div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-row-icon" style="background:#FEE2E2;">🚪</div>
+                <div class="profile-row-info"><div class="profile-row-label" style="color:var(--danger);">Log Out</div></div>
+                <div class="profile-row-action">›</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 16px 16px;text-align:center;">
+            <img src="logo.svg" alt="SkillUp" height="24" style="opacity:.3;">
+            <div style="font-size:10px;color:var(--gray-400);margin-top:4px;">v1.0.0 · SkillUp Tuition Management</div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item" onclick="switchScreen('home',document.querySelectorAll('.sw-btn')[1])"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+          <div class="tab-item" onclick="switchScreen('schedule',document.querySelectorAll('.sw-btn')[2])"><span class="tab-icon">📅</span><span class="tab-label">Schedule</span></div>
+          <div class="tab-item" onclick="switchScreen('attendance',document.querySelectorAll('.sw-btn')[3])"><span class="tab-icon">✅</span><span class="tab-label">Attend.</span></div>
+          <div class="tab-item" onclick="switchScreen('assignments',document.querySelectorAll('.sw-btn')[4])"><span class="tab-icon">📝</span><span class="tab-label">Tasks</span></div>
+          <div class="tab-item" onclick="switchScreen('fees',document.querySelectorAll('.sw-btn')[5])"><span class="tab-icon">💳</span><span class="tab-label">Fees</span></div>
+          <div class="tab-item active" onclick="switchScreen('profile',document.querySelectorAll('.sw-btn')[6])"><span class="tab-icon">👤</span><span class="tab-label" style="color:var(--primary);">Profile</span><div class="tab-pip"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /phone-screen -->
+  </div><!-- /phone -->
+
+  <!-- ── Annotation panel ── -->
+  <div class="sidebar-panel" id="anno-panel">
+    <div class="screen-label" id="anno-label">
+      <h3>🔐 Login Screen</h3>
+      <p>First screen students see. Supports both Student and Parent login via tabs.</p>
+    </div>
+    <div class="note-card" id="anno-notes">
+      <div class="note-title">Design decisions</div>
+      <div class="note-item">Gradient hero area with logo reinforces brand identity</div>
+      <div class="note-item">Tabbed Student / Parent login reduces confusion</div>
+      <div class="note-item">Student ID or email — either works as the username</div>
+      <div class="note-item">"Forgot password?" sends reset link to parent's email</div>
+      <div class="note-item">No self-registration — admin creates accounts</div>
+    </div>
+    <div class="note-card" style="border-left-color:#10B981;">
+      <div class="note-title" style="color:#10B981;">Questions to discuss</div>
+      <div class="note-item">Should parents and students share one login or separate accounts?</div>
+      <div class="note-item">Biometric login (Face ID / fingerprint) for mobile app?</div>
+      <div class="note-item">Is OTP via WhatsApp needed for password reset?</div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<script>
+const annotations = {
+  login: {
+    label: '<h3>🔐 Login Screen</h3><p>First screen students see. Supports both Student and Parent login via tabs.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Gradient hero with logo reinforces brand on first impression</div><div class="note-item">Tabbed Student / Parent — one URL, two roles</div><div class="note-item">Username: Student ID (e.g. STU-2401) or email</div><div class="note-item">Forgot password sends reset to parent\'s registered email</div><div class="note-item">No self-registration — admin creates all accounts</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Separate logins for student vs parent, or same account?</div><div class="note-item">Biometric (Face ID / fingerprint) for the mobile app?</div><div class="note-item">OTP via WhatsApp for password reset?</div>'
+  },
+  home: {
+    label: '<h3>🏠 Student Home</h3><p>Landing page after login — glanceable summary of today\'s classes, pending tasks, and key stats.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Stats bar: attendance %, pending tasks, latest grade, fee status</div><div class="note-item">Today\'s classes shown in chronological order with live/upcoming badges</div><div class="note-item">Notice board for class cancellations and reschedules</div><div class="note-item">Bottom tab bar for all main sections (6 tabs)</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Should the home show all subjects or only today\'s?</div><div class="note-item">Push notifications for class reminders — how far in advance?</div><div class="note-item">Should students see their academic results on home?</div>'
+  },
+  schedule: {
+    label: '<h3>📅 My Schedule</h3><p>Day-view timeline of classes for the selected date. Horizontal day picker at top.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Day-by-day view (not weekly) — easier on mobile</div><div class="note-item">Horizontal date strip for quick date switching</div><div class="note-item">Timeline with colour-coded subject dots</div><div class="note-item">Replacement class notices appear inline</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Should students see a weekly/monthly calendar view too?</div><div class="note-item">Room location — is this always the same or variable?</div><div class="note-item">QR check-in button when student arrives at class?</div>'
+  },
+  attendance: {
+    label: '<h3>✅ Attendance</h3><p>Monthly calendar heatmap + per-subject breakdown. Helps students track their attendance.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Monthly calendar with P/A/L colour coding</div><div class="note-item">Summary stats (overall %, absences, lates) in header</div><div class="note-item">Per-subject progress bars with percentage</div><div class="note-item">Read-only — students cannot edit their own attendance</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Should students be able to submit a "reason for absence" note?</div><div class="note-item">Alert/warning if attendance drops below 80%?</div><div class="note-item">Parent receives automatic WhatsApp when student marked absent?</div>'
+  },
+  assignments: {
+    label: '<h3>📝 Assignments</h3><p>Grouped by status — overdue, upcoming, submitted. Checkbox UX for quick reference.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Three groups: Overdue (red) / Upcoming (yellow) / Submitted (green)</div><div class="note-item">Checkbox is visual only — teacher marks submitted in admin panel</div><div class="note-item">Filter bar (All / Pending / Submitted) at top</div><div class="note-item">Score shown for graded submissions</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Do students need to upload assignment files, or is it just a tracker?</div><div class="note-item">Should teachers be able to add comments/feedback per assignment?</div><div class="note-item">Push notification when a new assignment is created?</div>'
+  },
+  fees: {
+    label: '<h3>💳 My Fees</h3><p>Current month payment status + full history. Green banner = paid, red = overdue.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Banner colour changes: green (paid) / orange (not yet due) / red (overdue)</div><div class="note-item">Next month\'s upcoming fee shown as a gentle reminder</div><div class="note-item">Full payment history scrollable below</div><div class="note-item">Receipt download button for each paid month</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Online payment integration (FPX / DuitNow QR) or manual only?</div><div class="note-item">Should parents get a WhatsApp reminder 3 days before due date?</div><div class="note-item">Student vs parent — who can see the fee screen?</div>'
+  },
+  profile: {
+    label: '<h3>👤 Profile</h3><p>Student info, enrolled subjects, parent contact, and account settings.</p>',
+    notes: '<div class="note-title">Design decisions</div><div class="note-item">Stat row: quick summary of attendance, grade, pending tasks, fees</div><div class="note-item">Parent contact is read-only — can only be changed by admin</div><div class="note-item">Password change available to student</div><div class="note-item">SkillUp logo and version shown at footer</div>',
+    q: '<div class="note-title" style="color:#10B981;">Questions to discuss</div><div class="note-item">Should students be able to upload a profile photo?</div><div class="note-item">Language toggle — BM / English?</div><div class="note-item">Dark mode preference?</div>'
+  }
+};
+
+function switchScreen(id, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  // scroll phone back to top
+  document.getElementById('phone-screen').scrollTop = 0;
+
+  // update annotations
+  const a = annotations[id];
+  if (a) {
+    document.getElementById('anno-label').innerHTML = a.label;
+    document.getElementById('anno-notes').innerHTML = a.notes;
+    // replace green card
+    const greenCard = document.querySelector('.note-card:last-child');
+    if (greenCard) greenCard.innerHTML = a.q;
+  }
+}
+</script>
+</body>
+</html>
