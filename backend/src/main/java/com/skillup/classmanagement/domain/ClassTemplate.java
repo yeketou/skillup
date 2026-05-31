@@ -2,6 +2,7 @@ package com.skillup.classmanagement.domain;
 
 import com.skillup.branch.domain.Branch;
 import com.skillup.common.BaseEntity;
+import com.skillup.staff.domain.Staff;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,9 +39,20 @@ public class ClassTemplate extends BaseEntity {
     @JoinColumn(name = "branch_id", nullable = false)
     private Branch branch;
 
-    /** Free-text teacher name — no Teacher entity in Phase 2. */
+    /**
+     * Free-text teacher name — kept for backwards compatibility and as a per-session
+     * override (e.g. substitute). Prefer linking a {@link Staff} via {@link #teacher}.
+     */
     @Column(name = "teacher_name", length = 150)
     private String teacherName;
+
+    /**
+     * Assigned teacher (Phase 12). Nullable — templates created before Phase 12
+     * may only have the free-text {@link #teacherName}.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id")
+    private Staff teacher;
 
     /** Day of the week this class recurs (uses java.time.DayOfWeek). */
     @Enumerated(EnumType.STRING)

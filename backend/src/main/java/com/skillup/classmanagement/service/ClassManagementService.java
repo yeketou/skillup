@@ -7,6 +7,8 @@ import com.skillup.classmanagement.dto.*;
 import com.skillup.classmanagement.repository.*;
 import com.skillup.common.exception.BusinessException;
 import com.skillup.common.exception.ResourceNotFoundException;
+import com.skillup.staff.domain.Staff;
+import com.skillup.staff.repository.StaffRepository;
 import com.skillup.student.domain.Student;
 import com.skillup.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +29,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ClassManagementService {
 
-    private final ClassTemplateRepository templateRepository;
-    private final ClassSessionRepository  sessionRepository;
+    private final ClassTemplateRepository  templateRepository;
+    private final ClassSessionRepository   sessionRepository;
     private final ClassEnrollmentRepository enrollmentRepository;
-    private final SubjectRepository       subjectRepository;
-    private final BranchRepository        branchRepository;
-    private final StudentRepository       studentRepository;
-    private final SubjectService          subjectService;
+    private final SubjectRepository        subjectRepository;
+    private final BranchRepository         branchRepository;
+    private final StudentRepository        studentRepository;
+    private final StaffRepository          staffRepository;
+    private final SubjectService           subjectService;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // CLASS TEMPLATES
@@ -54,11 +57,14 @@ public class ClassManagementService {
             throw new BusinessException("INVALID_TIME_RANGE", "End time must be after start time");
         }
 
+        Staff teacher = resolveTeacher(req.getTeacherId());
+
         ClassTemplate template = ClassTemplate.builder()
                 .name(req.getName())
                 .subject(subject)
                 .branch(branch)
                 .teacherName(req.getTeacherName())
+                .teacher(teacher)
                 .dayOfWeek(dayOfWeek)
                 .startTime(req.getStartTime())
                 .endTime(req.getEndTime())
@@ -106,6 +112,7 @@ public class ClassManagementService {
 
         if (req.getName()        != null) template.setName(req.getName());
         if (req.getTeacherName() != null) template.setTeacherName(req.getTeacherName());
+        if (req.getTeacherId()   != null) template.setTeacher(resolveTeacher(req.getTeacherId()));
         if (req.getDayOfWeek()   != null) template.setDayOfWeek(parseDayOfWeek(req.getDayOfWeek()));
         if (req.getStartTime()   != null) template.setStartTime(req.getStartTime());
         if (req.getEndTime()     != null) template.setEndTime(req.getEndTime());
@@ -303,6 +310,12 @@ public class ClassManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("ClassTemplate", id));
     }
 
+    private Staff resolveTeacher(UUID teacherId) {
+        if (teacherId == null) return null;
+        return staffRepository.findActiveById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff", teacherId));
+    }
+
     private DayOfWeek parseDayOfWeek(String value) {
         try {
             return DayOfWeek.valueOf(value.toUpperCase());
@@ -323,6 +336,11 @@ public class ClassManagementService {
     private ClassTemplateResponse toTemplateResponse(ClassTemplate t) {
         long enrolled = enrollmentRepository
                 .countByTemplateIdAndStatusAndDeletedAtIsNull(t.getId(), EnrollmentStatus.ACTIVE);
+        // Resolve display teacher name: linked Staff takes priority over free-text
+        String resolvedTeacherName = (t.getTeacher() != null)
+                ? t.getTeacher().getFullName()
+                : t.getTeacherName();
+
         return ClassTemplateResponse.builder()
                 .id(t.getId())
                 .name(t.getName())
@@ -331,7 +349,8 @@ public class ClassManagementService {
                 .subjectName(t.getSubject().getName())
                 .branchId(t.getBranch().getId())
                 .branchName(t.getBranch().getName())
-                .teacherName(t.getTeacherName())
+                .teacherId(t.getTeacher() != null ? t.getTeacher().getId() : null)
+                .teacherName(resolvedTeacherName)
                 .dayOfWeek(t.getDayOfWeek().name())
                 .startTime(t.getStartTime())
                 .endTime(t.getEndTime())

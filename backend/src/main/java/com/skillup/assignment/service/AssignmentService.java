@@ -317,6 +317,12 @@ public class AssignmentService {
 
     @Transactional
     public SubmissionResponse gradeSubmission(UUID submissionId, GradeSubmissionRequest req) {
+        return gradeSubmission(submissionId, req, "ADMIN");
+    }
+
+    @Transactional
+    public SubmissionResponse gradeSubmission(UUID submissionId, GradeSubmissionRequest req,
+                                              String gradedBy) {
         AssignmentSubmission submission = requireSubmission(submissionId);
 
         if (submission.getStatus() == SubmissionStatus.PENDING) {
@@ -341,12 +347,12 @@ public class AssignmentService {
         submission.setScore(req.getScore());
         submission.setFeedback(req.getFeedback());
         submission.setGradedAt(OffsetDateTime.now());
-        submission.setGradedBy("SYSTEM");   // Phase 9: replace with authenticated user principal
+        submission.setGradedBy(gradedBy != null ? gradedBy : "ADMIN");
         submission.setStatus(SubmissionStatus.GRADED);
 
         AssignmentSubmission saved = submissionRepository.save(submission);
-        log.info("Submission {} graded — score={}, student={}",
-                submissionId, req.getScore(),
+        log.info("Submission {} graded by '{}' — score={}, student={}",
+                submissionId, gradedBy, req.getScore(),
                 submission.getStudent().getStudentRef());
         return toSubmissionResponse(saved);
     }

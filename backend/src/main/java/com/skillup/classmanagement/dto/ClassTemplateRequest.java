@@ -24,6 +24,9 @@ public class ClassTemplateRequest {
     @Size(max = 150)
     private String teacherName;
 
+    /** Optional: link a Staff member as the assigned teacher. Takes priority over teacherName in responses. */
+    private UUID teacherId;
+
     /** MONDAY | TUESDAY | WEDNESDAY | THURSDAY | FRIDAY | SATURDAY | SUNDAY */
     @NotBlank(message = "Day of week is required")
     private String dayOfWeek;

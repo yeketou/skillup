@@ -35,4 +35,13 @@ public interface ClassTemplateRepository extends JpaRepository<ClassTemplate, UU
                                @Param("subjectId") UUID subjectId,
                                @Param("dayOfWeek") DayOfWeek dayOfWeek,
                                @Param("active")    Boolean active);
+
+    /** Templates where this staff member is the assigned teacher. */
+    @Query("""
+            SELECT t FROM ClassTemplate t
+            WHERE t.teacher.id = :teacherId
+              AND t.deletedAt IS NULL
+            ORDER BY t.dayOfWeek, t.startTime
+            """)
+    List<ClassTemplate> findByTeacherId(@Param("teacherId") UUID teacherId);
 }

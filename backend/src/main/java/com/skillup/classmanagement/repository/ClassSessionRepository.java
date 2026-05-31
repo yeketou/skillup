@@ -44,4 +44,20 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, UUID
             ORDER BY s.sessionDate, s.startTime
             """)
     List<ClassSession> findUpcoming(@Param("from") LocalDate from);
+
+    /**
+     * Sessions assigned to a specific teacher within a date range (both bounds required).
+     * The controller always supplies non-null bounds — default to today / today+1yr if omitted.
+     */
+    @Query("""
+            SELECT s FROM ClassSession s
+            WHERE s.template.teacher.id = :teacherId
+              AND s.deletedAt IS NULL
+              AND s.sessionDate >= :from
+              AND s.sessionDate <= :to
+            ORDER BY s.sessionDate, s.startTime
+            """)
+    List<ClassSession> findByTeacherIdAndDateRange(@Param("teacherId") UUID teacherId,
+                                                   @Param("from")      LocalDate from,
+                                                   @Param("to")        LocalDate to);
 }

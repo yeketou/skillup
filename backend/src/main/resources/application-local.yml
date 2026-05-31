@@ -33,3 +33,8 @@ logging:
 springdoc:
   swagger-ui:
     enabled: true
+
+# Enable portal + teacher dev bypass (skip JWT — use X-Portal-Account-ID / X-Staff-ID headers)
+skillup:
+  portal:
+    local-dev-bypass: true

@@ -22,6 +22,10 @@ public class ClassTemplateResponse {
     private UUID branchId;
     private String branchName;
 
+    /** Staff UUID of the assigned teacher (null if only free-text teacherName is set). */
+    private UUID   teacherId;
+
+    /** Resolved display name — from the linked Staff record if set, else the free-text field. */
     private String teacherName;
     private String dayOfWeek;
     private LocalTime startTime;
