@@ -51,14 +51,22 @@ public class S3StorageService implements StorageService {
         this.expiryMinutes = expiryMinutes;
         this.maxSizeMb     = maxSizeMb;
 
-        this.presigner = S3Presigner.builder()
-                .endpointOverride(URI.create(endpoint))
+        S3Presigner.Builder builder = S3Presigner.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
-                .build();
+                        AwsBasicCredentials.create(accessKey, secretKey)));
 
-        log.info("S3StorageService initialised: endpoint={}, bucket={}", endpoint, bucket);
+        // Only override endpoint for non-AWS targets (MinIO, LocalStack).
+        // Real AWS S3 uses its own regional endpoint resolution — overriding it
+        // forces path-style URLs which AWS is deprecating for new buckets.
+        if (endpoint != null && !endpoint.isBlank() && !endpoint.contains("amazonaws.com")) {
+            builder.endpointOverride(URI.create(endpoint));
+            log.info("S3StorageService initialised with custom endpoint: {}, bucket={}", endpoint, bucket);
+        } else {
+            log.info("S3StorageService initialised: AWS S3 region={}, bucket={}", region, bucket);
+        }
+
+        this.presigner = builder.build();
     }
 
     @Override

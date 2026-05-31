@@ -3,8 +3,9 @@ spring:
     name: skillup-backend
 
   # ── Database ──────────────────────────────────────────────────────────────
+  # SPRING_DATASOURCE_URL overrides the default (set on EC2 to point to RDS)
   datasource:
-    url: jdbc:postgresql://localhost:5432/skillup_db
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/skillup_db}
     username: ${DB_USERNAME:skillup_app}
     password: ${DB_PASSWORD:skillup_app_pass}
     hikari:
