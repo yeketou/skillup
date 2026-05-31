@@ -188,8 +188,8 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <configuration>
                     <url>jdbc:postgresql://localhost:5432/skillup_db</url>
-                    <user>postgres</user>
-                    <password>postgres</password>
+                    <user>${env.DB_USERNAME}</user>
+                    <password>${env.DB_PASSWORD}</password>
                     <locations>
                         <location>filesystem:src/main/resources/db/migration</location>
                     </locations>
