@@ -4,6 +4,7 @@ import com.skillup.branch.domain.Branch;
 import com.skillup.branch.repository.BranchRepository;
 import com.skillup.common.exception.BusinessException;
 import com.skillup.common.exception.ResourceNotFoundException;
+import com.skillup.communication.service.NotificationService;
 import com.skillup.portal.service.KeycloakAdminService;
 import com.skillup.student.domain.*;
 import com.skillup.student.dto.*;
@@ -31,6 +32,7 @@ public class StudentService {
     private final BranchRepository               branchRepository;
     private final EntityManager                  entityManager;
     private final KeycloakAdminService           keycloakAdminService;
+    private final NotificationService            notificationService;
 
     // ── Create ────────────────────────────────────────────────────────────────
 
@@ -76,6 +78,15 @@ public class StudentService {
         StudentParent primary = saved.getPrimaryParent();
         if (primary != null && primary.getEmail() != null && !primary.getEmail().isBlank()) {
             ensurePortalAccount(primary.getEmail(), primary.getFullName(), saved);
+        }
+
+        // Send WhatsApp welcome message to primary parent
+        if (primary != null) {
+            try {
+                notificationService.sendWelcome(saved, primary);
+            } catch (Exception e) {
+                log.warn("Failed to send welcome message for student {}: {}", studentRef, e.getMessage());
+            }
         }
 
         log.info("Student created: {} {} (branch: {})", studentRef, req.getFullName(), branch.getName());

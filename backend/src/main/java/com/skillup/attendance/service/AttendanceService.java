@@ -12,6 +12,7 @@ import com.skillup.classmanagement.repository.ClassEnrollmentRepository;
 import com.skillup.classmanagement.repository.ClassSessionRepository;
 import com.skillup.common.exception.BusinessException;
 import com.skillup.common.exception.ResourceNotFoundException;
+import com.skillup.communication.service.NotificationService;
 import com.skillup.student.domain.Student;
 import com.skillup.student.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AttendanceService {
     private final ClassSessionRepository   sessionRepository;
     private final ClassEnrollmentRepository enrollmentRepository;
     private final StudentRepository        studentRepository;
+    private final NotificationService      notificationService;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SESSION ATTENDANCE SHEET
@@ -73,7 +75,16 @@ public class AttendanceService {
 
             record.setStatus(status);
             record.setNotes(mark.getNotes());
-            attendanceRepository.save(record);
+            AttendanceRecord saved = attendanceRepository.save(record);
+
+            if (status == AttendanceStatus.ABSENT) {
+                try {
+                    notificationService.sendAttendanceAbsentAlert(saved);
+                } catch (Exception e) {
+                    log.warn("Failed to send absent alert for student {}: {}",
+                            student.getStudentRef(), e.getMessage());
+                }
+            }
         }
 
         log.info("Marked attendance for {} student(s) in session {} ({})",
@@ -104,6 +115,15 @@ public class AttendanceService {
         record.setStatus(status);
         record.setNotes(req.getNotes());
         AttendanceRecord saved = attendanceRepository.save(record);
+
+        if (status == AttendanceStatus.ABSENT) {
+            try {
+                notificationService.sendAttendanceAbsentAlert(saved);
+            } catch (Exception e) {
+                log.warn("Failed to send absent alert for student {}: {}",
+                        studentId, e.getMessage());
+            }
+        }
 
         log.info("Updated attendance: student {} session {} → {}",
                 studentId, sessionId, status);
