@@ -53,4 +53,18 @@ public interface AssignmentSubmissionRepository extends JpaRepository<Assignment
 
     /** Count of submissions in a given status for an assignment (used for summary stats). */
     long countByAssignmentIdAndStatusAndDeletedAtIsNull(UUID assignmentId, SubmissionStatus status);
+
+    /**
+     * Centre-wide count of submissions in a given status, optionally scoped to one branch.
+     * Branch is resolved via assignment → class template → branch.
+     * Used by the dashboard to show pending-submission count.
+     */
+    @Query("""
+            SELECT COUNT(s) FROM AssignmentSubmission s
+            WHERE s.status = :status
+              AND s.deletedAt IS NULL
+              AND (:branchId IS NULL OR s.assignment.template.branch.id = :branchId)
+            """)
+    long countByStatusAndBranchId(@Param("status")   SubmissionStatus status,
+                                  @Param("branchId") UUID branchId);
 }

@@ -63,4 +63,20 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, UUID> {
             ORDER BY r.subject.id NULLS LAST, r.subjectLabel NULLS LAST, r.examDate DESC
             """)
     List<ExamResult> findAllForSummary(@Param("studentId") UUID studentId);
+
+    /**
+     * All exam results within a date range, optionally scoped to one branch.
+     * Branch is resolved via the direct branch FK on each ExamResult.
+     * Used by the academic report to compute per-subject performance metrics.
+     */
+    @Query("""
+            SELECT r FROM ExamResult r
+            WHERE r.deletedAt IS NULL
+              AND r.examDate BETWEEN :from AND :to
+              AND (:branchId IS NULL OR r.branch.id = :branchId)
+            ORDER BY r.examDate DESC, r.createdAt DESC
+            """)
+    List<ExamResult> findByDateRange(@Param("from")     LocalDate from,
+                                    @Param("to")       LocalDate to,
+                                    @Param("branchId") UUID branchId);
 }

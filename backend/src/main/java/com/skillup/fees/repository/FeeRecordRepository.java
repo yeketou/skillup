@@ -74,4 +74,31 @@ public interface FeeRecordRepository extends JpaRepository<FeeRecord, UUID> {
               AND f.deletedAt IS NULL
             """)
     List<FeeRecord> findAllOverdue();
+
+    // ── Report queries ────────────────────────────────────────────────────────
+
+    /**
+     * All fee records within a billing-month range, optionally filtered by branch.
+     * Used by the financial report to group and aggregate by month.
+     */
+    @Query("""
+            SELECT f FROM FeeRecord f
+            WHERE f.deletedAt IS NULL
+              AND f.billingMonth BETWEEN :from AND :to
+              AND (:branchId IS NULL OR f.template.branch.id = :branchId)
+            ORDER BY f.billingMonth ASC, f.student.fullName
+            """)
+    List<FeeRecord> findByMonthRange(@Param("from")     LocalDate from,
+                                     @Param("to")       LocalDate to,
+                                     @Param("branchId") UUID branchId);
+
+    /** All fees for a single billing month (dashboard: current-month snapshot). */
+    @Query("""
+            SELECT f FROM FeeRecord f
+            WHERE f.deletedAt IS NULL
+              AND f.billingMonth = :month
+              AND (:branchId IS NULL OR f.template.branch.id = :branchId)
+            """)
+    List<FeeRecord> findByMonth(@Param("month")    LocalDate month,
+                                @Param("branchId") UUID branchId);
 }

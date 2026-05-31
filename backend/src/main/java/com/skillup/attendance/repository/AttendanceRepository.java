@@ -52,4 +52,34 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, UU
             """)
     List<AttendanceRecord> findByStudentIdAndTemplateId(@Param("studentId") UUID studentId,
                                                         @Param("templateId") UUID templateId);
+
+    // ── Report queries ────────────────────────────────────────────────────────
+
+    /**
+     * All attendance records within a date range, optionally filtered by branch.
+     * Used by the attendance report and dashboard.
+     */
+    @Query("""
+            SELECT a FROM AttendanceRecord a
+            WHERE a.deletedAt IS NULL
+              AND a.session.sessionDate BETWEEN :from AND :to
+              AND (:branchId IS NULL OR a.session.template.branch.id = :branchId)
+            """)
+    List<AttendanceRecord> findByDateRange(@Param("from")     LocalDate from,
+                                           @Param("to")       LocalDate to,
+                                           @Param("branchId") UUID branchId);
+
+    /**
+     * All attendance records for a specific class template in a date range.
+     * Used to calculate per-class attendance rates.
+     */
+    @Query("""
+            SELECT a FROM AttendanceRecord a
+            WHERE a.deletedAt IS NULL
+              AND a.session.template.id = :templateId
+              AND a.session.sessionDate BETWEEN :from AND :to
+            """)
+    List<AttendanceRecord> findByTemplateAndDateRange(@Param("templateId") UUID templateId,
+                                                      @Param("from")       LocalDate from,
+                                                      @Param("to")         LocalDate to);
 }

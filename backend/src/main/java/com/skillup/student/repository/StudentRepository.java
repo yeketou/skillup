@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,4 +49,12 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
 
     @Query("SELECT COUNT(s) FROM Student s WHERE s.branch.id = :branchId AND s.status = 'ACTIVE' AND s.deletedAt IS NULL")
     long countActiveByBranch(@Param("branchId") UUID branchId);
+
+    /** Centre-wide active student count, optionally scoped to one branch. */
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.deletedAt IS NULL AND s.status = 'ACTIVE' AND (:branchId IS NULL OR s.branch.id = :branchId)")
+    long countActive(@Param("branchId") UUID branchId);
+
+    /** All active students, optionally scoped to a branch. */
+    @Query("SELECT s FROM Student s WHERE s.deletedAt IS NULL AND s.status = 'ACTIVE' AND (:branchId IS NULL OR s.branch.id = :branchId) ORDER BY s.fullName")
+    List<Student> findAllActive(@Param("branchId") UUID branchId);
 }
