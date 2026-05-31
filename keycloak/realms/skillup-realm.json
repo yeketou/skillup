@@ -3,7 +3,7 @@
   "enabled": true,
   "displayName": "SkillUp",
   "displayNameHtml": "<strong>SkillUp</strong> Tuition Management",
-  "sslRequired": "none",
+  "sslRequired": "NONE",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,

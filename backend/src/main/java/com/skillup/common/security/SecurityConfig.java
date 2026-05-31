@@ -52,10 +52,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Public endpoints — no /api prefix (context path is stripped before matchers)
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/portal/auth/**").permitAll()
+                .requestMatchers("/portal/auth/**").permitAll()
+                .requestMatchers("/teacher/auth/**").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )
