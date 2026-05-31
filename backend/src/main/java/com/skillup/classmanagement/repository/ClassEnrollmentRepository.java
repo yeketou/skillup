@@ -30,4 +30,18 @@ public interface ClassEnrollmentRepository extends JpaRepository<ClassEnrollment
 
     /** Count ACTIVE enrolments for capacity enforcement. */
     long countByTemplateIdAndStatusAndDeletedAtIsNull(UUID templateId, EnrollmentStatus status);
+
+    /**
+     * All ACTIVE enrolments across the entire centre, optionally filtered by branch.
+     * Used by the fee-generation job to create monthly fee records.
+     */
+    @Query("""
+            SELECT e FROM ClassEnrollment e
+            WHERE e.status = :status
+              AND e.deletedAt IS NULL
+              AND (:branchId IS NULL OR e.template.branch.id = :branchId)
+            ORDER BY e.template.branch.name, e.student.fullName
+            """)
+    List<ClassEnrollment> findActiveEnrollments(@Param("status") EnrollmentStatus status,
+                                                @Param("branchId") UUID branchId);
 }
