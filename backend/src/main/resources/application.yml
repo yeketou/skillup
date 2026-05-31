@@ -92,9 +92,11 @@ skillup:
     s3:
       bucket: ${S3_BUCKET:skillup-uploads-local}
   whatsapp:
+    enabled: ${WHATSAPP_ENABLED:false}        # true in prod — set env var + credentials below
     api-url: ${WHATSAPP_API_URL:https://graph.facebook.com/v19.0}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    from-name: ${WHATSAPP_FROM_NAME:SkillUp Tuition Centre}
   fees:
     reminder-days: [3, 5, 15]   # days after due date to send WhatsApp reminders
   file:

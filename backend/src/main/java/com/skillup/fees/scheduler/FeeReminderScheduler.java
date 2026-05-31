@@ -1,5 +1,6 @@
 package com.skillup.fees.scheduler;
 
+import com.skillup.communication.service.NotificationService;
 import com.skillup.fees.config.FeeProperties;
 import com.skillup.fees.domain.FeeRecord;
 import com.skillup.fees.repository.FeeRecordRepository;
@@ -16,10 +17,9 @@ import java.util.List;
 /**
  * Daily scheduled job that:
  * 1. Marks PENDING/PARTIAL fees past their due date as OVERDUE.
- * 2. Logs WhatsApp reminder prompts for fees that are 3, 5, or 15 days overdue
- *    (configurable via skillup.fees.reminder-days in application.yml).
- *
- * Phase 10 will wire the actual WhatsApp API call in place of the log statement.
+ * 2. Sends WhatsApp reminders (via NotificationService) for fees that hit
+ *    a configured overdue threshold (default: 3, 5, 15 days after due date).
+ *    Configure thresholds via {@code skillup.fees.reminder-days} in application.yml.
  */
 @Slf4j
 @Component
@@ -29,6 +29,7 @@ public class FeeReminderScheduler {
     private final FeeService           feeService;
     private final FeeRecordRepository  feeRecordRepository;
     private final FeeProperties        feeProperties;
+    private final NotificationService  notificationService;
 
     /**
      * Runs every day at 08:00 MYT (UTC+8 = 00:00 UTC).
@@ -54,24 +55,13 @@ public class FeeReminderScheduler {
         }
     }
 
-    /**
-     * Placeholder for WhatsApp reminder dispatch.
-     * Phase 10: replace body with actual WhatsApp API call via
-     * the communication module's WhatsAppService.
-     */
     private void sendReminder(FeeRecord fee, long daysOverdue) {
-        String studentRef = fee.getStudent().getStudentRef();
-        String className  = fee.getTemplate().getName();
-        String balance    = String.format("RM %.2f", fee.getBalance());
-        String dueDate    = fee.getDueDate().toString();
-
-        log.info("[WhatsApp PENDING] student={} class='{}' balance={} dueDate={} daysOverdue={}",
-                studentRef, className, balance, dueDate, daysOverdue);
-
-        // TODO Phase 10:
-        // whatsAppService.sendFeeReminder(
-        //     fee.getStudent().getPrimaryParent().getWhatsappNumber(),
-        //     studentRef, className, balance, dueDate, daysOverdue
-        // );
+        try {
+            notificationService.sendFeeReminder(fee, daysOverdue);
+        } catch (Exception ex) {
+            // Never let a notification failure abort the scheduler sweep
+            log.error("[FeeScheduler] Failed to send reminder for fee {} (student={}): {}",
+                    fee.getId(), fee.getStudent().getStudentRef(), ex.getMessage());
+        }
     }
 }
