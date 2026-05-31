@@ -1,13 +1,16 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # SkillUp — Local Development Infrastructure
 #
-# Start:  docker compose up -d
-# Stop:   docker compose down
-# Wipe:   docker compose down -v    (removes all volumes / data)
+# Prerequisites:
+#   1. Copy .env.example → .env and set POSTGRES_PASSWORD (postgres superuser password)
+#   2. Run scripts/01_create_db_and_user.sql to create skillup_app user + skillup_db
 #
-# PostgreSQL runs NATIVELY on Windows — not here.
-# Create the database manually once:
-#   psql -U postgres -c "CREATE DATABASE skillup_db;"
+# Start all services:    docker compose up -d
+# Init MinIO bucket:     docker compose run --rm init-minio
+# Stop:                  docker compose down
+# Wipe (incl. volumes):  docker compose down -v
+#
+# PostgreSQL runs NATIVELY on Windows — not in Docker.
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -84,9 +87,30 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO bucket initialisation (run once) ───────────────────────────────────
+  # Usage: docker compose run --rm init-minio
+  # Creates the skillup-uploads bucket and sets it to private (presigned URLs only).
+  init-minio:
+    image: minio/mc:latest
+    container_name: skillup-init-minio
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - skillup-net
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 skillup_minio skillup_minio_pass &&
+        mc mb --ignore-existing local/skillup-uploads &&
+        mc anonymous set none local/skillup-uploads &&
+        echo 'MinIO bucket ready: skillup-uploads (private, presigned URLs only)'
+      "
+    profiles:
+      - init
 
 # ── Optional tools (pgAdmin) ──────────────────────────────────────────────────
   pgadmin:

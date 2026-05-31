@@ -48,7 +48,7 @@
     },
     {
       "clientId": "skillup-portal",
-      "name": "SkillUp Student Portal",
+      "name": "SkillUp Parent Portal",
       "enabled": true,
       "publicClient": true,
       "redirectUris": [
@@ -58,6 +58,25 @@
       "webOrigins": [
         "http://localhost:5174",
         "http://localhost:3001"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "skillup-teacher",
+      "name": "SkillUp Teacher Portal",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:5175/*",
+        "http://localhost:3002/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5175",
+        "http://localhost:3002"
       ],
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,

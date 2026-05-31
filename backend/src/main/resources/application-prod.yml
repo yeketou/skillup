@@ -1,0 +1,58 @@
+# =============================================================================
+# SkillUp — Production profile
+# Activate: SPRING_PROFILES_ACTIVE=prod
+# All secrets are injected via environment variables — see .env.example
+# =============================================================================
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+  # JWT validation is active in production — do NOT exclude OAuth2 auto-config
+  # (application-local.yml excludes it for dev; this re-enables it implicitly
+  #  since prod does not include local's exclusion list)
+
+logging:
+  level:
+    com.skillup:                    INFO
+    org.springframework.web:        WARN
+    org.springframework.security:   WARN
+    org.hibernate.SQL:              WARN
+    org.hibernate.type:             WARN
+    org.flywaydb:                   INFO
+
+# Swagger disabled in production — expose only /actuator/health for load-balancer probes
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never    # never expose stack details publicly
+
+# ── Production feature flags ──────────────────────────────────────────────────
+skillup:
+  portal:
+    local-dev-bypass: false     # CRITICAL — JWT is always required in production
+
+  keycloak:
+    enabled: true               # RealKeycloakAdminService active
+
+  storage:
+    enabled: true               # S3StorageService (MinIO or AWS S3) active
+
+  whatsapp:
+    enabled: true               # MetaWhatsAppSender active
+
+  fees:
+    auto-generate: true         # FeeGenerationScheduler fires on 1st of each month

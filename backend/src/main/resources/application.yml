@@ -118,6 +118,8 @@ skillup:
     local-dev-bypass: ${PORTAL_LOCAL_DEV_BYPASS:false}
   fees:
     reminder-days: [3, 5, 15]   # days after due date to send WhatsApp reminders
+    due-day-of-month: 15         # auto-generated fees are due on this day of the month
+    generation-cron: "0 0 7 1 * *"  # 1st of each month at 07:00 MYT
   classes:
     lookahead-weeks: 4            # weeks ahead the scheduler generates sessions
     generation-cron: "0 0 6 * * MON"   # every Monday 06:00 MYT
