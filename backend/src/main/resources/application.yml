@@ -97,6 +97,25 @@ skillup:
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     access-token: ${WHATSAPP_ACCESS_TOKEN:}
     from-name: ${WHATSAPP_FROM_NAME:SkillUp Tuition Centre}
+  keycloak:
+    enabled: ${KEYCLOAK_ENABLED:false}        # true in prod — requires Keycloak 24 realm "skillup"
+    base-url: ${KEYCLOAK_BASE_URL:http://localhost:8070}
+    realm: ${KEYCLOAK_REALM:skillup}
+    portal-client-id: ${KEYCLOAK_PORTAL_CLIENT_ID:skillup-portal}
+    portal-client-secret: ${KEYCLOAK_PORTAL_CLIENT_SECRET:change-me}
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin_pass}
+  storage:
+    enabled: ${STORAGE_ENABLED:false}         # true in prod — requires MinIO or AWS S3
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${STORAGE_ACCESS_KEY:minio_admin}
+    secret-key: ${STORAGE_SECRET_KEY:minio_password}
+    region: ${STORAGE_REGION:ap-southeast-1}
+    bucket: ${STORAGE_BUCKET:skillup-uploads}
+    presign-expiry-minutes: ${STORAGE_PRESIGN_EXPIRY:15}
+  portal:
+    # Set to true in local/dev to accept X-Portal-Account-ID header instead of JWT
+    local-dev-bypass: ${PORTAL_LOCAL_DEV_BYPASS:false}
   fees:
     reminder-days: [3, 5, 15]   # days after due date to send WhatsApp reminders
   file:

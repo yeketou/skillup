@@ -4,6 +4,7 @@ import com.skillup.branch.domain.Branch;
 import com.skillup.branch.repository.BranchRepository;
 import com.skillup.common.exception.BusinessException;
 import com.skillup.common.exception.ResourceNotFoundException;
+import com.skillup.portal.service.KeycloakAdminService;
 import com.skillup.student.domain.*;
 import com.skillup.student.dto.*;
 import com.skillup.student.repository.*;
@@ -24,11 +25,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StudentService {
 
-    private final StudentRepository          studentRepository;
-    private final StudentParentRepository    parentRepository;
+    private final StudentRepository              studentRepository;
+    private final StudentParentRepository        parentRepository;
     private final StudentPortalAccountRepository portalAccountRepository;
-    private final BranchRepository           branchRepository;
-    private final EntityManager              entityManager;
+    private final BranchRepository               branchRepository;
+    private final EntityManager                  entityManager;
+    private final KeycloakAdminService           keycloakAdminService;
 
     // ── Create ────────────────────────────────────────────────────────────────
 
@@ -229,10 +231,21 @@ public class StudentService {
 
         if (!account.isActive()) {
             account.setActive(true);
-            portalAccountRepository.save(account);
         }
 
-        // TODO Phase 10: trigger Keycloak user creation + send welcome email via Mailpit
+        // Provision Keycloak user if not yet done
+        if (!account.isKeycloakProvisioned()) {
+            String keycloakId = keycloakAdminService.createUser(primary.getEmail(), primary.getFullName());
+            // Temporary password: IC number if available, else a UUID prefix the admin will share
+            String tempPassword = (primary.getIcNumber() != null && !primary.getIcNumber().isBlank())
+                    ? primary.getIcNumber()
+                    : java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            keycloakAdminService.setPassword(keycloakId, tempPassword, true);
+            account.setKeycloakId(java.util.UUID.fromString(keycloakId));
+            log.info("Keycloak account provisioned for portal: email={}, keycloakId={}", primary.getEmail(), keycloakId);
+        }
+
+        portalAccountRepository.save(account);
         log.info("Portal account activated for student: {} (email: {})", studentId, primary.getEmail());
     }
 
