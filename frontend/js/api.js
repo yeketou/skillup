@@ -88,9 +88,9 @@ const API = (() => {
     // ── Classes & Sessions ────────────────────────────────────────────────────
     const getTemplates   = (params = {}) => {
         const q = new URLSearchParams(params).toString();
-        return get(`/classes/templates${q ? '?' + q : ''}`);
+        return get(`/classes${q ? '?' + q : ''}`);       // GET /classes (no /templates suffix)
     };
-    const getTemplate    = id   => get(`/classes/templates/${id}`);
+    const getTemplate    = id   => get(`/classes/${id}`);
     const createTemplate = data => post('/classes', data);
 
     const getSessions = (templateId, from, to) => {
@@ -128,13 +128,13 @@ const API = (() => {
     // ── Exams / Results ───────────────────────────────────────────────────────
     const getClassResults  = (templateId, examName) => {
         const q = examName ? `?examName=${encodeURIComponent(examName)}` : '';
-        return get(`/academic/templates/${templateId}/results${q}`);
+        return get(`/classes/${templateId}/exam-results${q}`);
     };
     const getStudentResults = (studentId, params = {}) => {
         const q = new URLSearchParams(params).toString();
-        return get(`/academic/students/${studentId}/results${q ? '?' + q : ''}`);
+        return get(`/students/${studentId}/exam-results${q ? '?' + q : ''}`);
     };
-    const recordResult  = data  => post('/academic/results', data);
+    const recordResult  = data  => post('/exam-results', data);
 
     // ── Staff ─────────────────────────────────────────────────────────────────
     const getStaff = (params = {}) => {

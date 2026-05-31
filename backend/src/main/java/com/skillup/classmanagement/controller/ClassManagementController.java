@@ -1,6 +1,9 @@
 package com.skillup.classmanagement.controller;
 
+import com.skillup.classmanagement.domain.ClassSession;
+import com.skillup.classmanagement.domain.ClassTemplate;
 import com.skillup.classmanagement.dto.*;
+import com.skillup.classmanagement.repository.ClassSessionRepository;
 import com.skillup.classmanagement.service.ClassManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +22,8 @@ import java.util.UUID;
 @Tag(name = "Class Management", description = "Class templates, sessions, and student enrolments")
 public class ClassManagementController {
 
-    private final ClassManagementService classManagementService;
+    private final ClassManagementService  classManagementService;
+    private final ClassSessionRepository  sessionRepository;
 
     // ── Class Templates ───────────────────────────────────────────────────────
 
@@ -64,6 +68,20 @@ public class ClassManagementController {
     }
 
     // ── Sessions ──────────────────────────────────────────────────────────────
+
+    @GetMapping("/sessions/upcoming")
+    @Operation(summary = "Upcoming sessions across all class templates from a given date")
+    public ResponseEntity<List<ClassSessionResponse>> getUpcomingSessions(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            LocalDate from) {
+        LocalDate effectiveFrom = from != null ? from : LocalDate.now();
+        List<com.skillup.classmanagement.domain.ClassSession> sessions =
+                sessionRepository.findUpcoming(effectiveFrom);
+        List<ClassSessionResponse> responses = sessions.stream()
+                .map(this::toSessionResponse)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
 
     @GetMapping("/classes/{id}/sessions")
     @Operation(summary = "List sessions for a class (optionally filter by date range)")
@@ -121,5 +139,27 @@ public class ClassManagementController {
     public ResponseEntity<List<ClassEnrollmentResponse>> getStudentTimetable(
             @PathVariable UUID studentId) {
         return ResponseEntity.ok(classManagementService.getStudentTimetable(studentId));
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private ClassSessionResponse toSessionResponse(ClassSession s) {
+        ClassTemplate t = s.getTemplate();
+        String teacherName = s.getTeacherName() != null ? s.getTeacherName()
+                : (t.getTeacher() != null ? t.getTeacher().getFullName() : t.getTeacherName());
+        return ClassSessionResponse.builder()
+                .id(s.getId())
+                .templateId(t.getId())
+                .templateName(t.getName())
+                .subjectName(t.getSubject().getName())
+                .sessionDate(s.getSessionDate())
+                .startTime(s.getStartTime())
+                .endTime(s.getEndTime())
+                .teacherName(teacherName)
+                .status(s.getStatus().name())
+                .notes(s.getNotes())
+                .createdAt(s.getCreatedAt())
+                .updatedAt(s.getUpdatedAt())
+                .build();
     }
 }
