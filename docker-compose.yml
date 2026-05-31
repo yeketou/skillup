@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────────────────────────────────────
 # SkillUp — Local Development Infrastructure
 #
@@ -23,7 +21,7 @@ services:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://host.docker.internal:5432/skillup_db
       KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: postgres
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_DB_SCHEMA: keycloak
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin_pass
