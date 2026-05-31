@@ -25,14 +25,18 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
      * Multi-filter search with optional name, status, branch, grade.
      * name matches against fullName or preferredName (case-insensitive, partial).
      */
+    /**
+     * CAST(:param AS string) is required for Hibernate 6 + PostgreSQL.
+     * Without it, null parameters are inferred as bytea and lower(bytea) fails.
+     */
     @Query("""
             SELECT s FROM Student s
             WHERE s.deletedAt IS NULL
-              AND (:name     IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :name, '%'))
-                                    OR LOWER(s.preferredName) LIKE LOWER(CONCAT('%', :name, '%')))
+              AND (:name     IS NULL OR LOWER(s.fullName)     LIKE LOWER(CONCAT('%', CAST(:name  AS string), '%'))
+                                    OR LOWER(s.preferredName) LIKE LOWER(CONCAT('%', CAST(:name  AS string), '%')))
               AND (:status   IS NULL OR s.status = :status)
               AND (:branchId IS NULL OR s.branch.id = :branchId)
-              AND (:grade    IS NULL OR LOWER(s.currentGrade) LIKE LOWER(CONCAT('%', :grade, '%')))
+              AND (:grade    IS NULL OR LOWER(s.currentGrade) LIKE LOWER(CONCAT('%', CAST(:grade AS string), '%')))
             """)
     Page<Student> search(@Param("name")     String name,
                          @Param("status")   StudentStatus status,

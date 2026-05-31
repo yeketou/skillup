@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,13 +15,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * Local development security configuration.
  * All endpoints are open — no JWT required.
+ * @PreAuthorize annotations are NOT enforced (method security disabled for local).
  * Active on profiles: "local" and "local-no-kafka".
  *
  * Pass X-Branch-ID header manually when testing branch-scoped APIs.
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 @Profile("local | local-no-kafka")
 public class LocalSecurityConfig {
