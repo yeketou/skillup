@@ -135,7 +135,13 @@
 
     <div class="nav-section">Admin</div>
     <div class="nav-item" onclick="show('staff',this)"><span class="icon">👩‍🏫</span> Staff</div>
+    <div class="nav-item" onclick="show('branches',this)"><span class="icon">🏢</span> Branches</div>
+    <div class="nav-item" onclick="show('subjects',this)"><span class="icon">📖</span> Subjects</div>
+    <div class="nav-item" onclick="show('holidays',this)"><span class="icon">🎉</span> Public Holidays</div>
     <div class="nav-item" onclick="show('timetable',this)"><span class="icon">🗓️</span> Timetable</div>
+
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" onclick="show('reports',this)"><span class="icon">📈</span> Reports</div>
   </nav>
   <div class="sidebar-footer">
     <div class="user-chip">
@@ -263,23 +269,38 @@
   <div class="grid-2">
     <div class="card">
       <div class="card-header">
-        <div><div class="card-title">Mark Attendance</div><div class="card-sub" id="att-session-info">Select a session below</div></div>
-        <select class="form-select" style="width:220px;" id="att-session-select" onchange="loadAttendanceSheet()">
-          <option value="">— Select Session —</option>
-        </select>
+        <div><div class="card-title">Mark Attendance</div><div class="card-sub" id="att-session-info">Select a session to begin</div></div>
+      </div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+          <label class="form-label">Class</label>
+          <select class="form-select" id="att-class-filter" onchange="filterAttendanceSessions()">
+            <option value="">All Classes</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="att-date-filter" type="date" onchange="filterAttendanceSessions()">
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+          <label class="form-label">Session</label>
+          <select class="form-select" id="att-session-select" onchange="loadAttendanceSheet()">
+            <option value="">— Select Session —</option>
+          </select>
+        </div>
       </div>
       <div class="table-wrap">
         <table><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Notes</th></tr></thead>
         <tbody id="att-table"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-500);">Select a session to mark attendance</td></tr></tbody></table>
       </div>
-      <div style="padding:16px;border-top:1px solid var(--gray-100);display:flex;gap:10px;" id="att-actions" style="display:none;">
+      <div style="padding:16px;border-top:1px solid var(--gray-100);display:flex;gap:10px;" id="att-actions">
         <button class="btn btn-primary" onclick="saveAttendance()">💾 Save Attendance</button>
         <button class="btn btn-outline">📲 Notify Absent Parents</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header"><div class="card-title">Upcoming Sessions</div><div class="card-sub">Next 7 days</div></div>
+      <div class="card-header"><div class="card-title">Sessions</div><div class="card-sub" id="att-sessions-sub">Filtered results</div></div>
       <div id="upcoming-sessions" class="loading"><span class="spinner-inline"></span></div>
     </div>
   </div>
@@ -370,18 +391,133 @@
 <!-- ══════ CLASSES ══════ -->
 <div class="screen" id="screen-classes">
   <div id="classes-grid" class="grid-3" style="margin-bottom:20px;"></div>
+
+  <!-- Add New Class form -->
+  <div class="card" id="add-class-form" style="display:none;margin-bottom:20px;">
+    <div class="card-header">
+      <div class="card-title">Add New Class</div>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('add-class-form').style.display='none'">✕</button>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Class Name *</label><input class="form-input" id="cf-name" placeholder="e.g. Math Form 4 – Morning"></div>
+        <div class="form-group"><label class="form-label">Subject *</label><select class="form-select" id="cf-subject"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Branch *</label><select class="form-select" id="cf-branch"></select></div>
+        <div class="form-group"><label class="form-label">Teacher</label><select class="form-select" id="cf-teacher"><option value="">— None —</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Day of Week *</label>
+          <select class="form-select" id="cf-day">
+            <option value="">— Select —</option>
+            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option>
+            <option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Start Time *</label><input class="form-input" id="cf-start" type="time"></div>
+        <div class="form-group"><label class="form-label">End Time *</label><input class="form-input" id="cf-end" type="time"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date *</label><input class="form-input" id="cf-startdate" type="date"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" id="cf-enddate" type="date"></div>
+        <div class="form-group"><label class="form-label">Max Capacity</label><input class="form-input" id="cf-capacity" type="number" min="1" value="30"></div>
+        <div class="form-group"><label class="form-label">Monthly Fee (RM)</label><input class="form-input" id="cf-fee" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <button class="btn btn-primary" onclick="submitNewClass()">✓ Create Class</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════ RESULTS ══════ -->
 <div class="screen" id="screen-results">
-  <div class="card">
-    <div class="card-header"><div class="card-title">Academic Results</div><div class="card-sub">Search by student to view results</div></div>
-    <div class="card-body">
-      <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <input class="form-input" id="results-search" placeholder="Search student name…" style="flex:1;" oninput="debounce(searchStudentsForResults,400)()">
+  <!-- Tab bar -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--gray-200);">
+    <button class="sm-tab active" data-rtab="view"   onclick="switchResultsTab('view')">📊 View Results</button>
+    <button class="sm-tab"        data-rtab="record" onclick="switchResultsTab('record')">✏ Record Results</button>
+    <button class="sm-tab"        data-rtab="class"  onclick="switchResultsTab('class')">📚 Class Results</button>
+  </div>
+
+  <!-- VIEW tab -->
+  <div id="results-tab-view">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Student Results</div><div class="card-sub">Search by student name</div></div>
+      <div class="card-body">
+        <input class="form-input" id="results-search" placeholder="🔍  Search student name…" style="margin-bottom:16px;" oninput="debounce(searchStudentsForResults,400)()">
+        <div id="results-student-list"></div>
+        <div id="results-content"></div>
       </div>
-      <div id="results-student-list"></div>
-      <div id="results-content"></div>
+    </div>
+  </div>
+
+  <!-- RECORD tab -->
+  <div id="results-tab-record" style="display:none;">
+    <div class="grid-2">
+      <!-- Exam details -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Exam Details</div></div>
+        <div class="card-body">
+          <div class="form-group"><label class="form-label">Exam Name *</label><input class="form-input" id="er-exam-name" placeholder="e.g. Mid-Year Exam 2026, Chapter 3 Quiz"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Exam Type</label>
+              <select class="form-select" id="er-exam-type">
+                <option value="INTERNAL_EXAM">Internal Exam</option>
+                <option value="SCHOOL_EXAM">School Exam</option>
+                <option value="TRIAL_EXAM">Trial Exam</option>
+                <option value="MOCK_EXAM">Mock Exam</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Exam Date *</label><input class="form-input" id="er-exam-date" type="date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Max Score *</label><input class="form-input" id="er-max-score" type="number" value="100" min="1"></div>
+            <div class="form-group"><label class="form-label">Subject</label><select class="form-select" id="er-subject"><option value="">— Select (optional) —</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Class (load students)</label>
+            <select class="form-select" id="er-class" onchange="loadStudentsForExam()">
+              <option value="">— Select a class —</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Or free-text subject label</label>
+            <input class="form-input" id="er-subject-label" placeholder="e.g. Bahasa Malaysia Paper 1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Scores entry -->
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Enter Scores</div><div class="card-sub" id="er-students-sub">Select a class to load students</div></div>
+        </div>
+        <div id="er-students-list" style="padding:16px;">
+          <div style="color:var(--gray-500);text-align:center;padding:20px;">Select a class above</div>
+        </div>
+        <div style="padding:12px 16px;border-top:1px solid var(--gray-100);">
+          <button class="btn btn-primary" style="width:100%;" onclick="submitBulkResults()">✓ Save All Results</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASS tab -->
+  <div id="results-tab-class" style="display:none;">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Class Results</div><div class="card-sub">View all exam results for a class</div></div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+          <label class="form-label">Class</label>
+          <select class="form-select" id="cr-class" onchange="loadClassResults()"><option value="">— Select —</option></select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+          <label class="form-label">Exam Name (filter)</label>
+          <input class="form-input" id="cr-exam-name" placeholder="e.g. Mid-Year" oninput="debounce(loadClassResults,500)()">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Student</th><th>Subject</th><th>Exam</th><th>Date</th><th>Score</th><th>Grade</th></tr></thead>
+        <tbody id="cr-results-body"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-500);">Select a class to view results</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -389,24 +525,274 @@
 <!-- ══════ ASSIGNMENTS ══════ -->
 <div class="screen" id="screen-assignments">
   <div class="grid-2">
+    <!-- Left: list -->
     <div class="card">
-      <div class="card-header"><div class="card-title">Assignments</div><div class="card-sub">All classes</div></div>
+      <div class="card-header">
+        <div><div class="card-title">Assignments</div><div class="card-sub" id="asgn-list-sub">Select a class</div></div>
+      </div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+          <label class="form-label">Class</label>
+          <select class="form-select" id="asgn-class-filter" onchange="loadAssignments()">
+            <option value="">All Classes</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="asgn-status-filter" onchange="loadAssignments()">
+            <option value="">All</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
+      </div>
       <div id="assignments-list" class="loading"><span class="spinner-inline"></span></div>
     </div>
+
+    <!-- Right: create -->
     <div class="card">
       <div class="card-header"><div class="card-title">Create Assignment</div></div>
       <div class="card-body">
-        <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="asgn-title" placeholder="e.g. Math Worksheet 6A"></div>
+        <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="asgn-title" placeholder="e.g. Math Worksheet 6A"></div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Class</label><select class="form-select" id="asgn-template"></select></div>
-          <div class="form-group"><label class="form-label">Due Date</label><input class="form-input" type="date" id="asgn-due"></div>
+          <div class="form-group"><label class="form-label">Class *</label><select class="form-select" id="asgn-template"></select></div>
+          <div class="form-group"><label class="form-label">Due Date *</label><input class="form-input" type="datetime-local" id="asgn-due"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Max Score</label><input class="form-input" id="asgn-max" placeholder="100" type="number"></div>
-          <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="asgn-type"><option value="HOMEWORK">Homework</option><option value="QUIZ">Quiz</option><option value="TEST">Test</option><option value="PROJECT">Project</option></select></div>
+          <div class="form-group"><label class="form-label">Type</label>
+            <select class="form-select" id="asgn-type">
+              <option value="HOMEWORK">Homework</option><option value="QUIZ">Quiz</option>
+              <option value="TEST">Test</option><option value="PROJECT">Project</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="asgn-desc" rows="3" style="resize:none;" placeholder="Instructions…"></textarea></div>
-        <button class="btn btn-primary" style="width:100%;" onclick="submitAssignment()">Create Assignment</button>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="asgn-allow-late"> <span class="form-label" style="margin:0;">Allow late submissions</span>
+          </label>
+        </div>
+        <div class="form-group"><label class="form-label">Description / Instructions</label><textarea class="form-input" id="asgn-desc" rows="3" style="resize:none;" placeholder="Instructions for students…"></textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" style="flex:1;" onclick="submitAssignment(false)">Save as Draft</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="submitAssignment(true)">Create &amp; Publish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ BRANCHES ══════ -->
+<div class="screen" id="screen-branches">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div><div class="card-title">Branches</div><div class="card-sub" id="branch-count">Loading…</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openBranchForm()">+ Add Branch</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Branch</th><th>Code</th><th>Phone</th><th>Email</th><th>Address</th><th>Status</th><th></th></tr></thead>
+        <tbody id="branch-table"><tr><td colspan="7" class="loading"><span class="spinner-inline"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add / Edit form -->
+  <div class="card" id="branch-form" style="display:none;">
+    <div class="card-header">
+      <div class="card-title" id="branch-form-title">Add Branch</div>
+      <button class="btn btn-outline btn-sm" onclick="closeBranchForm()">✕ Cancel</button>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Branch Name *</label><input class="form-input" id="bf-name" placeholder="e.g. Petaling Jaya Branch"></div>
+        <div class="form-group"><label class="form-label">Code *</label><input class="form-input" id="bf-code" placeholder="e.g. PJ" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="bf-phone" placeholder="+60312345678"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="bf-email" placeholder="pj@centre.com" type="email"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Address</label><textarea class="form-input" id="bf-address" rows="2" style="resize:none;" placeholder="Full address…"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="submitBranchForm()">✓ Save Branch</button>
+        <button class="btn btn-outline" onclick="closeBranchForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ SUBJECTS ══════ -->
+<div class="screen" id="screen-subjects">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <div><div class="card-title">Subjects</div><div class="card-sub" id="subject-count">Loading…</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="subject-show-inactive" onchange="loadSubjects()"> Show inactive
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="openSubjectForm()">+ Add Subject</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Code</th><th>Description</th><th>Status</th><th></th></tr></thead>
+        <tbody id="subject-table"><tr><td colspan="5" class="loading"><span class="spinner-inline"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" id="subject-form" style="display:none;">
+    <div class="card-header">
+      <div class="card-title" id="subject-form-title">Add Subject</div>
+      <button class="btn btn-outline btn-sm" onclick="closeSubjectForm()">✕ Cancel</button>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="sbf-name" placeholder="e.g. Additional Mathematics"></div>
+        <div class="form-group"><label class="form-label">Code *</label><input class="form-input" id="sbf-code" placeholder="e.g. ADD_MATH" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="sbf-desc" rows="2" style="resize:none;" placeholder="Optional description…"></textarea></div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="sbf-active" checked> <span class="form-label" style="margin:0;">Active</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="submitSubjectForm()">✓ Save Subject</button>
+        <button class="btn btn-outline" onclick="closeSubjectForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PUBLIC HOLIDAYS ══════ -->
+<div class="screen" id="screen-holidays">
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-title">Public Holidays</div><div class="card-sub">Sessions are not generated on these dates</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select class="form-select" style="width:100px;" id="holiday-year" onchange="loadHolidays()">
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openHolidayForm()">+ Add Holiday</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Type</th><th></th></tr></thead>
+        <tbody id="holiday-table"><tr><td colspan="4" class="loading"><span class="spinner-inline"></span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" id="holiday-form" style="display:none;margin-top:20px;">
+    <div class="card-header">
+      <div class="card-title">Add Public Holiday</div>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('holiday-form').style.display='none'">✕</button>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date *</label><input class="form-input" id="hf-date" type="date"></div>
+        <div class="form-group"><label class="form-label">Holiday Name *</label><input class="form-input" id="hf-name" placeholder="e.g. Hari Raya Aidilfitri"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select" id="hf-type">
+            <option value="PUBLIC">Public Holiday</option>
+            <option value="SCHOOL">School Holiday</option>
+            <option value="CENTRE">Centre Closure</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="hf-desc" placeholder="Optional notes"></div>
+      </div>
+      <button class="btn btn-primary" onclick="submitHoliday()">✓ Add Holiday</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ REPORTS ══════ -->
+<div class="screen" id="screen-reports">
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--gray-200);">
+    <button class="sm-tab active" data-rptab="financial"  onclick="switchReportTab('financial')">💰 Financial</button>
+    <button class="sm-tab"        data-rptab="attendance" onclick="switchReportTab('attendance')">✅ Attendance</button>
+    <button class="sm-tab"        data-rptab="academic"   onclick="switchReportTab('academic')">📊 Academic</button>
+  </div>
+
+  <!-- FINANCIAL -->
+  <div id="report-tab-financial">
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><div class="card-title">Financial Report</div></div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;"><label class="form-label">From Month</label><input class="form-input" id="rpt-fin-from" type="month"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">To Month</label><input class="form-input" id="rpt-fin-to" type="month"></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;"><label class="form-label">Branch</label><select class="form-select" id="rpt-fin-branch"><option value="">All Branches</option></select></div>
+        <button class="btn btn-primary btn-sm" onclick="loadFinancialReport()">Generate</button>
+      </div>
+      <div id="rpt-fin-summary" style="padding:16px;display:none;">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:0;">
+          <div class="stat-card"><div class="stat-label">Generated</div><div class="stat-val" id="rpt-fin-generated" style="font-size:20px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">Collected</div><div class="stat-val" id="rpt-fin-collected" style="font-size:20px;color:var(--success);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-val" id="rpt-fin-outstanding" style="font-size:20px;color:var(--danger);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Collection Rate</div><div class="stat-val" id="rpt-fin-rate" style="font-size:20px;">—</div></div>
+        </div>
+      </div>
+      <div class="table-wrap" id="rpt-fin-table-wrap" style="display:none;">
+        <table><thead><tr><th>Month</th><th>Generated</th><th>Collected</th><th>Outstanding</th><th>Rate</th><th>Records</th></tr></thead>
+        <tbody id="rpt-fin-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div id="report-tab-attendance" style="display:none;">
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><div class="card-title">Attendance Report</div></div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;"><label class="form-label">From</label><input class="form-input" id="rpt-att-from" type="date"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">To</label><input class="form-input" id="rpt-att-to" type="date"></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;"><label class="form-label">Branch</label><select class="form-select" id="rpt-att-branch"><option value="">All Branches</option></select></div>
+        <div class="form-group" style="margin:0;width:80px;"><label class="form-label">Low %</label><input class="form-input" id="rpt-att-threshold" type="number" value="80" min="1" max="100"></div>
+        <button class="btn btn-primary btn-sm" onclick="loadAttendanceReport()">Generate</button>
+      </div>
+      <div id="rpt-att-summary" style="padding:16px;display:none;">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-label">Total Marked</div><div class="stat-val" id="rpt-att-total" style="font-size:20px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">Present</div><div class="stat-val" id="rpt-att-present" style="font-size:20px;color:var(--success);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Absent</div><div class="stat-val" id="rpt-att-absent" style="font-size:20px;color:var(--danger);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Attendance Rate</div><div class="stat-val" id="rpt-att-rate" style="font-size:20px;">—</div></div>
+        </div>
+      </div>
+      <div id="rpt-att-tables" style="display:none;">
+        <div style="padding:0 16px 8px;font-weight:700;font-size:13px;">By Class</div>
+        <div class="table-wrap"><table><thead><tr><th>Class</th><th>Subject</th><th>Day</th><th>Marked</th><th>Present</th><th>Absent</th><th>Late</th><th>Rate</th></tr></thead>
+        <tbody id="rpt-att-classes"></tbody></table></div>
+        <div id="rpt-att-low-wrap" style="display:none;padding:16px 16px 0;">
+          <div style="font-weight:700;font-size:13px;color:var(--danger);margin-bottom:8px;">⚠️ Low Attendance Students</div>
+          <div class="table-wrap"><table><thead><tr><th>Student</th><th>Class</th><th>Rate</th><th>Sessions</th></tr></thead>
+          <tbody id="rpt-att-low"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACADEMIC -->
+  <div id="report-tab-academic" style="display:none;">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Academic Performance Report</div></div>
+      <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;"><label class="form-label">From</label><input class="form-input" id="rpt-acad-from" type="date"></div>
+        <div class="form-group" style="margin:0;"><label class="form-label">To</label><input class="form-input" id="rpt-acad-to" type="date"></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px;"><label class="form-label">Branch</label><select class="form-select" id="rpt-acad-branch"><option value="">All Branches</option></select></div>
+        <button class="btn btn-primary btn-sm" onclick="loadAcademicReport()">Generate</button>
+      </div>
+      <div id="rpt-acad-summary" style="padding:16px;display:none;">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-label">Total Exams</div><div class="stat-val" id="rpt-acad-total" style="font-size:20px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">Overall Average</div><div class="stat-val" id="rpt-acad-avg" style="font-size:20px;">—</div></div>
+          <div class="stat-card"><div class="stat-label">Overall Grade</div><div class="stat-val" id="rpt-acad-grade" style="font-size:20px;">—</div></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Subject</th><th>Exams</th><th>Average %</th><th>Grade</th><th>Pass Rate</th><th>Grade Distribution</th></tr></thead>
+          <tbody id="rpt-acad-body"></tbody>
+        </table></div>
       </div>
     </div>
   </div>
@@ -414,7 +800,7 @@
 
 <!-- ══════ TIMETABLE ══════ -->
 <div class="screen" id="screen-timetable">
-  <div class="card">
+  <div class="card" style="margin-bottom:20px;">
     <div class="card-header">
       <div><div class="card-title">Class Timetable</div><div class="card-sub">All active classes by day</div></div>
       <button class="btn btn-primary btn-sm" onclick="triggerSessionGeneration()">🔄 Generate Sessions</button>
@@ -423,12 +809,42 @@
       <div id="timetable-content" class="loading"><span class="spinner-inline"></span></div>
     </div>
   </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div><div class="card-title">Generated Sessions</div><div class="card-sub" id="sessions-list-sub">Filter to view sessions</div></div>
+    </div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+        <label class="form-label">Class</label>
+        <select class="form-select" id="sl-class" onchange="loadSessionsList()">
+          <option value="">All Classes</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">From</label>
+        <input class="form-input" id="sl-from" type="date" onchange="loadSessionsList()">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">To</label>
+        <input class="form-input" id="sl-to" type="date" onchange="loadSessionsList()">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Class</th><th>Subject</th><th>Time</th><th>Status</th><th></th></tr></thead>
+        <tbody id="sessions-list-body">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray-500);">Select a class or date range above</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 </div><!-- /content -->
 </main>
 
-<script src="/js/api.js"></script>
+<script src="/js/api.js?v=13"></script>
 <script>
 // ── Guard ─────────────────────────────────────────────────────────────────────
 if (!API.isLoggedIn()) window.location.href = '/login.html';
@@ -468,14 +884,18 @@ function today() { return new Date().toISOString().slice(0,10); }
 const pageConfig = {
   dashboard:      { title:'Dashboard', btn:'+ Add Student', action:showAddStudentForm },
   students:       { title:'Students', btn:'+ Register Student', action:showAddStudentForm },
-  classes:        { title:'Classes', btn:'+ New Class', action:()=>toast('Use the backend API to create classes','') },
+  classes:        { title:'Classes', btn:'+ New Class', action:()=>openAddClassForm() },
   attendance:     { title:'Attendance', btn:'💾 Save Attendance', action:saveAttendance },
   assignments:    { title:'Assignments', btn:'+ New Assignment', action:()=>{} },
   results:        { title:'Results & Reports', btn:'', action:()=>{} },
   fees:           { title:'Fees & Billing', btn:'+ Generate Fees', action:showGenerateFeesDialog },
   communications: { title:'WhatsApp', btn:'📲 Send Message', action:()=>{} },
   staff:          { title:'Staff', btn:'+ Add Staff', action:()=>document.getElementById('add-staff-form').style.display='block' },
-  timetable:      { title:'Timetable', btn:'🔄 Generate Sessions', action:triggerSessionGeneration },
+  branches:       { title:'Branches',         btn:'+ Add Branch',    action:openBranchForm },
+  subjects:       { title:'Subjects',         btn:'+ Add Subject',   action:openSubjectForm },
+  holidays:       { title:'Public Holidays',  btn:'+ Add Holiday',   action:openHolidayForm },
+  reports:        { title:'Reports',          btn:'',                action:()=>{} },
+  timetable:      { title:'Timetable',        btn:'🔄 Generate Sessions', action:triggerSessionGeneration },
 };
 
 function show(id, navEl) {
@@ -500,6 +920,10 @@ function show(id, navEl) {
     classes:        loadClasses,
     timetable:      loadTimetable,
     assignments:    loadAssignments,
+    branches:       loadBranches,
+    subjects:       loadSubjects,
+    holidays:       loadHolidays,
+    reports:        initReports,
   };
   loaders[id]?.();
 }
@@ -600,7 +1024,8 @@ async function loadDashboard() {
   // Today's sessions
   try {
     const sessions = await API.getUpcomingSessions(today());
-    const list = Array.isArray(sessions) ? sessions.slice(0,6) : [];
+    const todayStr = today();
+    const list = (Array.isArray(sessions) ? sessions : []).filter(s => s.sessionDate === todayStr).slice(0,6);
     const el = document.getElementById('dash-sessions');
     el.className = '';
     el.innerHTML = list.length === 0
@@ -645,7 +1070,7 @@ async function loadStudents() {
             <td style="font-size:12px;">${s.schoolName || '—'}</td>
             <td>${s.primaryParentPhone || '—'}</td>
             <td><span class="badge badge-${s.status==='ACTIVE'?'success':s.status==='INACTIVE'?'gray':'warning'}">${s.status}</span></td>
-            <td><button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${s.id}','${s.fullName.replace(/'/g,"\\'")}')">View</button></td>
+            <td><button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${s.id}')">View</button></td>
           </tr>`).join('');
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">Error: ${e.message}</td></tr>`;
@@ -696,41 +1121,95 @@ async function submitNewStudent() {
   }
 }
 
-async function viewStudentProfile(id, name) {
-  toast(`Loading profile for ${name}…`);
-  // Switch to results screen and show student
-  show('results', document.querySelector('[onclick*=results]'));
-  document.getElementById('results-search').value = name;
-  await searchStudentsForResults();
+async function viewStudentProfile(id) {
+  openStudentModal(id);
 }
 
 // ── Attendance ────────────────────────────────────────────────────────────────
+let _allAttSessions = [];
+
 async function loadAttendanceSessions() {
-  const sel = document.getElementById('att-session-select');
+  // Set default date to today
+  const datePicker = document.getElementById('att-date-filter');
+  if (!datePicker.value) datePicker.value = today();
+
+  // Populate class filter from already-loaded templates
+  const classSel = document.getElementById('att-class-filter');
+  if (classSel.options.length <= 1 && allTemplates.length) {
+    classSel.innerHTML = '<option value="">All Classes</option>' +
+      allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+
+  await filterAttendanceSessions();
+}
+
+async function filterAttendanceSessions() {
+  const classId  = document.getElementById('att-class-filter').value;
+  const dateVal  = document.getElementById('att-date-filter').value;
   const upcomingEl = document.getElementById('upcoming-sessions');
+  const subEl    = document.getElementById('att-sessions-sub');
+  upcomingEl.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
 
   try {
-    const sessions = await API.getUpcomingSessions(today());
-    const list = Array.isArray(sessions) ? sessions : [];
+    let list = [];
+    if (classId) {
+      // Load sessions for a specific class around the chosen date
+      const from = dateVal || today();
+      const to   = addDays(from, 30);
+      const res  = await API.getSessions(classId, from, to);
+      list = Array.isArray(res) ? res : [];
+      // Also include the 14 days before chosen date so past sessions are visible
+      const resPast = await API.getSessions(classId, addDays(from, -14), from);
+      const pastList = Array.isArray(resPast) ? resPast : [];
+      list = [...pastList, ...list].filter((s,i,a) => a.findIndex(x=>x.id===s.id)===i);
+      list.sort((a,b) => b.sessionDate.localeCompare(a.sessionDate));
+    } else {
+      // No class selected — load upcoming from chosen date
+      const res = await API.getUpcomingSessions(dateVal || today());
+      list = Array.isArray(res) ? res : [];
+    }
 
-    // Populate the dropdown
+    _allAttSessions = list;
+    subEl.textContent = list.length + ' session' + (list.length!==1?'s':'') + ' found';
+
+    // Populate session dropdown
+    const sel = document.getElementById('att-session-select');
     sel.innerHTML = '<option value="">— Select Session —</option>' +
-      list.map(s => `<option value="${s.id}">${s.sessionDate} · ${s.templateName} · ${s.startTime?.slice(0,5)}</option>`).join('');
+      list.map(s => `<option value="${s.id}">${s.sessionDate} · ${s.templateName} · ${s.startTime?.slice(0,5)||'—'} · ${s.status}</option>`).join('');
 
-    // Show list
+    // Show list panel
     upcomingEl.className = '';
     upcomingEl.innerHTML = list.length === 0
-      ? '<div style="padding:16px;color:var(--gray-500);text-align:center;">No upcoming sessions</div>'
-      : '<table><tbody>' + list.slice(0,10).map(s => `
+      ? '<div style="padding:16px;color:var(--gray-500);text-align:center;">No sessions found — try a different date or class, or generate sessions first.</div>'
+      : '<table><thead><tr><th>Date</th><th>Class</th><th>Time</th><th>Status</th><th></th></tr></thead><tbody>' +
+        list.slice(0,15).map(s => `
           <tr>
-            <td><strong>${s.sessionDate}</strong></td>
-            <td>${s.templateName}</td>
+            <td style="cursor:pointer;" onclick="pickSession('${s.id}')"><strong>${s.sessionDate}</strong></td>
+            <td style="cursor:pointer;" onclick="pickSession('${s.id}')">${s.templateName}</td>
             <td>${s.startTime?.slice(0,5)||'—'}</td>
             <td><span class="badge badge-${s.status==='COMPLETED'?'success':s.status==='CANCELLED'?'danger':'primary'}">${s.status}</span></td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                ${s.status!=='COMPLETED' ? `<button class="btn btn-sm btn-success" onclick="setSessionStatus('${s.id}','COMPLETED','attendance')">✓ Done</button>` : ''}
+                ${s.status==='SCHEDULED' ? `<button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;" onclick="setSessionStatus('${s.id}','CANCELLED','attendance')">✕ Cancel</button>` : ''}
+              </div>
+            </td>
           </tr>`).join('') + '</tbody></table>';
   } catch(e) {
     upcomingEl.innerHTML = `<div style="padding:16px;color:var(--danger);">Error: ${e.message}</div>`;
   }
+}
+
+function pickSession(sessionId) {
+  const sel = document.getElementById('att-session-select');
+  sel.value = sessionId;
+  loadAttendanceSheet();
+}
+
+function addDays(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
 }
 
 async function loadAttendanceSheet() {
@@ -849,8 +1328,9 @@ async function loadFees() {
             <td>${fmtDate(f.dueDate)}</td>
             <td><span class="badge badge-${f.status==='PAID'?'success':f.status==='OVERDUE'?'danger':'warning'}">${f.status}</span></td>
             <td style="display:flex;gap:6px;">
-              ${f.status!=='PAID'?`<button class="btn btn-sm btn-success" onclick="recordFeePayment('${f.id}','${f.amount}')">Pay</button>`:''}
-              ${f.status==='OVERDUE'?`<button class="btn btn-sm btn-warning" onclick="sendFeeReminder('${f.id}')">📲</button>`:''}
+              ${f.status!=='PAID'?`<button class="btn btn-sm btn-success" onclick="recordFeePayment('${f.id}','${f.balance??f.amount}','${(f.studentName||'').replace(/'/g,"\\'")}')">Pay</button>`:''}
+              ${f.status==='OVERDUE'?`<button class="btn btn-sm btn-warning fee-remind-btn" data-fee-id="${f.id}" onclick="sendFeeReminder('${f.id}')">📲</button>`:''}
+              ${f.status!=='PAID'&&f.status!=='WAIVED'?`<button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="waiveFeeRecord('${f.id}','${(f.studentName||'').replace(/'/g,"\\'")}')">Waive</button>`:''}
             </td>
           </tr>`).join('');
   } catch(e) {
@@ -858,25 +1338,72 @@ async function loadFees() {
   }
 }
 
-async function recordFeePayment(id, amount) {
-  const paid = prompt(`Record payment for fee record.\nAmount (RM): ${amount}\n\nEnter payment amount:`, amount);
-  if (!paid) return;
-  try {
-    await API.recordPayment(id, { amountPaid: parseFloat(paid), paymentMethod: 'CASH', notes: 'Admin recorded' });
-    toast('✅ Payment recorded');
-    loadFees();
-  } catch(e) { toast(`Error: ${e.message}`, 'error'); }
+async function recordFeePayment(id, amount, studentName) {
+  openPaymentModal(id, amount, studentName);
+}
+
+function openPaymentModal(feeId, amount, studentName) {
+  _payFeeId = feeId;
+  document.getElementById('pay-modal-title').textContent = `Record Payment — ${studentName}`;
+  document.getElementById('pay-amount').value  = amount;
+  document.getElementById('pay-method').value  = 'CASH';
+  document.getElementById('pay-ref').value     = '';
+  document.getElementById('pay-notes').value   = '';
+  document.getElementById('pay-date').value    = today();
+  document.getElementById('pay-modal').style.display = 'flex';
 }
 
 async function sendFeeReminder(feeId) {
   try {
-    await API.sendMessage({ recipientPhone: '60122030798', recipientName: 'Parent', message: 'Fee reminder from SkillUp.' });
-    toast('📲 Reminder sent');
+    // Fetch the fee record to get studentId + amounts
+    const fee = await API.getFees({ size: 200 });
+    const feeList = Array.isArray(fee) ? fee : (fee?.content || []);
+    const record  = feeList.find(f => f.id === feeId);
+    if (!record) { toast('Fee record not found', 'error'); return; }
+
+    // Fetch student to get primary parent WhatsApp
+    const student = await API.getStudent(record.studentId);
+    const parent  = (student.parents || []).find(p => p.primary) || student.parents?.[0];
+    if (!parent?.whatsappNumber && !parent?.phone) {
+      toast('No WhatsApp number on record for this parent', 'error'); return;
+    }
+    const phone = (parent.whatsappNumber || parent.phone).replace(/\D/g,'');
+    const msg = `Dear ${parent.fullName || 'Parent'},\n\nThis is a friendly reminder that the tuition fee for *${record.studentName}* for ${record.billingMonth} is outstanding.\n\nAmount due: RM ${parseFloat(record.balance).toFixed(2)}\nDue date: ${record.dueDate}\n\nPlease make payment at your earliest convenience. Thank you! 🙏\n\n— SkillUp Tuition Centre`;
+
+    await API.sendMessage({ studentId: record.studentId, recipientPhone: phone, recipientName: parent.fullName || 'Parent', message: msg });
+    toast(`📲 Reminder sent to ${parent.fullName || phone}`);
   } catch(e) { toast(`Error: ${e.message}`, 'error'); }
 }
 
 async function sendFeeReminders() {
-  toast('📲 Sending reminders to all overdue parents…');
+  const allRows = document.querySelectorAll('#fees-table tr');
+  const overdueIds = [];
+  // Collect overdue fee IDs from the rendered table's Pay buttons
+  document.querySelectorAll('#fees-table .fee-remind-btn').forEach(btn => {
+    overdueIds.push(btn.dataset.feeId);
+  });
+  if (!overdueIds.length) { toast('No overdue fees to remind', 'error'); return; }
+  if (!confirm(`Send WhatsApp reminders to parents of ${overdueIds.length} overdue fee(s)?`)) return;
+  toast(`📲 Sending ${overdueIds.length} reminder(s)…`);
+  let sent = 0, failed = 0;
+  for (const feeId of overdueIds) {
+    try { await sendFeeReminderSilent(feeId); sent++; }
+    catch { failed++; }
+  }
+  toast(`📲 Sent: ${sent}, Failed: ${failed}`);
+}
+
+async function sendFeeReminderSilent(feeId) {
+  const fee = await API.getFees({ size: 200 });
+  const feeList = Array.isArray(fee) ? fee : (fee?.content || []);
+  const record  = feeList.find(f => f.id === feeId);
+  if (!record) throw new Error('Not found');
+  const student = await API.getStudent(record.studentId);
+  const parent  = (student.parents || []).find(p => p.primary) || student.parents?.[0];
+  if (!parent?.whatsappNumber && !parent?.phone) throw new Error('No phone');
+  const phone = (parent.whatsappNumber || parent.phone).replace(/\D/g,'');
+  const msg = `Dear ${parent.fullName || 'Parent'},\n\nThis is a friendly reminder that the tuition fee for *${record.studentName}* for ${record.billingMonth} is outstanding.\n\nAmount due: RM ${parseFloat(record.balance).toFixed(2)}\nDue date: ${record.dueDate}\n\nPlease make payment at your earliest convenience. Thank you! 🙏\n\n— SkillUp Tuition Centre`;
+  await API.sendMessage({ studentId: record.studentId, recipientPhone: phone, recipientName: parent.fullName || 'Parent', message: msg });
 }
 
 function showGenerateFeesDialog() {
@@ -984,6 +1511,90 @@ async function activateStaffPortal(id, name) {
 }
 
 // ── Classes ───────────────────────────────────────────────────────────────────
+async function openAddClassForm() {
+  const form = document.getElementById('add-class-form');
+  form.style.display = 'block';
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Populate subject dropdown
+  const subSel = document.getElementById('cf-subject');
+  if (subSel.options.length <= 1) {
+    subSel.innerHTML = '<option value="">Loading…</option>';
+    try {
+      const subs = await API.getSubjects();
+      subSel.innerHTML = '<option value="">— Select Subject —</option>' +
+        (Array.isArray(subs) ? subs : []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    } catch { subSel.innerHTML = '<option value="">Failed to load</option>'; }
+  }
+
+  // Populate branch dropdown
+  const brSel = document.getElementById('cf-branch');
+  if (brSel.options.length <= 1) {
+    brSel.innerHTML = '<option value="">Loading…</option>';
+    try {
+      const brs = await API.getBranches();
+      brSel.innerHTML = '<option value="">— Select Branch —</option>' +
+        (Array.isArray(brs) ? brs : (brs?.content || [])).map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    } catch { brSel.innerHTML = '<option value="">Failed to load</option>'; }
+  }
+
+  // Populate teacher dropdown from staff list
+  const tSel = document.getElementById('cf-teacher');
+  if (tSel.options.length <= 1) {
+    try {
+      const staff = await API.getStaff({ role: 'TEACHER', active: true });
+      tSel.innerHTML = '<option value="">— None —</option>' +
+        (Array.isArray(staff) ? staff : []).map(s => `<option value="${s.id}">${s.fullName}</option>`).join('');
+    } catch { /* leave as None */ }
+  }
+}
+
+async function submitNewClass() {
+  const name      = document.getElementById('cf-name').value.trim();
+  const subjectId = document.getElementById('cf-subject').value;
+  const branchId  = document.getElementById('cf-branch').value;
+  const dayOfWeek = document.getElementById('cf-day').value;
+  const startTime = document.getElementById('cf-start').value;
+  const endTime   = document.getElementById('cf-end').value;
+  const startDate = document.getElementById('cf-startdate').value;
+  const endDate   = document.getElementById('cf-enddate').value;
+  const capacity  = document.getElementById('cf-capacity').value;
+  const fee       = document.getElementById('cf-fee').value;
+  const teacherId = document.getElementById('cf-teacher').value;
+
+  if (!name)      { toast('Class name is required', 'error'); return; }
+  if (!subjectId) { toast('Subject is required', 'error'); return; }
+  if (!branchId)  { toast('Branch is required', 'error'); return; }
+  if (!dayOfWeek) { toast('Day of week is required', 'error'); return; }
+  if (!startTime) { toast('Start time is required', 'error'); return; }
+  if (!endTime)   { toast('End time is required', 'error'); return; }
+  if (!startDate) { toast('Start date is required', 'error'); return; }
+
+  try {
+    await API.createTemplate({
+      name, subjectId, branchId, dayOfWeek,
+      startTime, endTime, startDate,
+      endDate: endDate || null,
+      maxCapacity: capacity ? parseInt(capacity) : 30,
+      feeAmount: fee ? parseFloat(fee) : null,
+      teacherId: teacherId || null,
+      active: true,
+    });
+    toast('✅ Class created successfully');
+    document.getElementById('add-class-form').style.display = 'none';
+    // Reset fields
+    ['cf-name','cf-start','cf-end','cf-startdate','cf-enddate','cf-fee'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cf-subject').selectedIndex = 0;
+    document.getElementById('cf-branch').selectedIndex  = 0;
+    document.getElementById('cf-teacher').selectedIndex = 0;
+    document.getElementById('cf-day').selectedIndex     = 0;
+    document.getElementById('cf-capacity').value        = 30;
+    loadClasses();
+  } catch(e) {
+    toast(e.message || 'Failed to create class', 'error');
+  }
+}
+
 async function loadClasses() {
   const el = document.getElementById('classes-grid');
   el.innerHTML = '<div class="loading"><span class="spinner-inline"></span> Loading classes…</div>';
@@ -996,15 +1607,19 @@ async function loadClasses() {
           <div style="width:50px;height:50px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;">📚</div>
           <div style="flex:1;">
             <div style="font-weight:700;">${t.name}</div>
-            <div style="font-size:12px;color:var(--gray-500);">${t.dayOfWeek} · ${t.startTime?.slice(0,5)||'—'} – ${t.endTime?.slice(0,5)||'—'}</div>
-            <div style="margin-top:4px;display:flex;gap:6px;">
+            <div style="font-size:12px;color:var(--gray-500);">${t.subjectName||''} · ${t.dayOfWeek} · ${t.startTime?.slice(0,5)||'—'} – ${t.endTime?.slice(0,5)||'—'}</div>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
               <span class="badge badge-${t.enrolledCount>=t.maxCapacity?'warning':'success'}">${t.enrolledCount}/${t.maxCapacity} students</span>
               ${t.teacherName?`<span class="badge badge-primary">${t.teacherName}</span>`:''}
             </div>
           </div>
         </div>
+        <div style="padding:0 16px 12px;display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-sm btn-outline" onclick='openEditClassModal(${JSON.stringify(t)})'>✏ Edit</button>
+          <button class="btn btn-sm btn-primary" onclick="openEnrollModal('${t.id}','${t.name.replace(/'/g,"\\'")}',${t.enrolledCount},${t.maxCapacity})">+ Enroll Student</button>
+        </div>
       </div>`).join('') + `
-      <div class="card" style="border:2px dashed var(--gray-300);cursor:pointer;" onclick="toast('Use the staff portal or API to create classes','')">
+      <div class="card" style="border:2px dashed var(--gray-300);cursor:pointer;" onclick="openAddClassForm()">
         <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gray-500);min-height:80px;">
           <span style="font-size:24px;">+</span><span style="font-weight:600;">Add New Class</span>
         </div>
@@ -1015,63 +1630,247 @@ async function loadClasses() {
 }
 
 // ── Assignments ───────────────────────────────────────────────────────────────
+// ── Assignments ───────────────────────────────────────────────────────────────
 async function loadAssignments() {
-  const el = document.getElementById('assignments-list');
-  el.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
-  if (!allTemplates.length) {
-    el.innerHTML = '<div style="padding:16px;color:var(--gray-500);">No classes found</div>'; return;
+  // Populate class filter if empty
+  const classSel = document.getElementById('asgn-class-filter');
+  if (classSel.options.length <= 1 && allTemplates.length) {
+    classSel.innerHTML = '<option value="">All Classes</option>' +
+      allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
   }
+
+  const classId    = classSel.value;
+  const statusFilter = document.getElementById('asgn-status-filter').value;
+  const el = document.getElementById('assignments-list');
+  const sub = document.getElementById('asgn-list-sub');
+  el.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
+  el.className = 'loading';
+
   try {
-    // Load assignments from first template as example
-    const t = allTemplates[0];
-    const list = await API.getAssignments(t.id);
-    const arr = Array.isArray(list) ? list : [];
+    // Fetch from each class or a single one
+    let arr = [];
+    const targets = classId
+      ? [classId]
+      : allTemplates.map(t => t.id);
+
+    const results = await Promise.all(
+      targets.map(id => API.getAssignments(id).catch(() => []))
+    );
+    arr = results.flat().filter(Boolean);
+    if (statusFilter) arr = arr.filter(a => a.status === statusFilter);
+    arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    sub.textContent = arr.length + ' assignment' + (arr.length !== 1 ? 's' : '');
     el.className = '';
     el.innerHTML = arr.length === 0
-      ? '<div style="padding:16px;color:var(--gray-500);">No assignments yet</div>'
-      : '<table><thead><tr><th>Title</th><th>Class</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>' +
+      ? '<div style="padding:20px;color:var(--gray-500);text-align:center;">No assignments found</div>'
+      : '<table><thead><tr><th>Title</th><th>Class</th><th>Due</th><th>Submissions</th><th>Status</th><th></th></tr></thead><tbody>' +
         arr.map(a => `
           <tr>
-            <td><strong>${a.title}</strong></td>
-            <td>${a.templateName || '—'}</td>
-            <td>${fmtDate(a.dueDate)}</td>
+            <td><strong>${a.title}</strong><div style="font-size:11px;color:var(--gray-500);">${a.type||''}</div></td>
+            <td style="font-size:12px;">${a.templateName||'—'}</td>
+            <td style="font-size:12px;">${fmtDate(a.dueDate)}</td>
+            <td style="font-size:12px;">${a.gradedCount??0}/${a.totalSubmissions??0} graded</td>
             <td><span class="badge badge-${a.status==='PUBLISHED'?'success':a.status==='CLOSED'?'gray':'warning'}">${a.status}</span></td>
-            <td><button class="btn btn-sm btn-outline">View</button></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${a.status==='DRAFT'    ? `<button class="btn btn-sm btn-success" onclick="publishAsgn('${a.id}')">Publish</button>` : ''}
+                ${a.status==='PUBLISHED'? `<button class="btn btn-sm btn-warning" onclick="closeAsgn('${a.id}')">Close</button>` : ''}
+                ${a.status!=='DRAFT'    ? `<button class="btn btn-sm btn-outline" onclick="openSubmissionsModal('${a.id}','${a.title.replace(/'/g,"\\'")}','${a.maxScore??100}')">Submissions</button>` : ''}
+              </div>
+            </td>
           </tr>`).join('') + '</tbody></table>';
   } catch(e) {
+    el.className = '';
     el.innerHTML = `<div style="padding:16px;color:var(--danger);">Error: ${e.message}</div>`;
   }
 }
 
-async function submitAssignment() {
+async function publishAsgn(id) {
+  try {
+    await API.publishAssignment(id);
+    toast('✅ Assignment published — submission slots created for all enrolled students');
+    loadAssignments();
+  } catch(e) { toast(e.message || 'Failed to publish', 'error'); }
+}
+
+async function closeAsgn(id) {
+  if (!confirm('Close this assignment? No new submissions will be accepted.')) return;
+  try {
+    await API.closeAssignment(id);
+    toast('Assignment closed');
+    loadAssignments();
+  } catch(e) { toast(e.message || 'Failed to close', 'error'); }
+}
+
+async function submitAssignment(andPublish = false) {
   const title      = document.getElementById('asgn-title').value.trim();
   const templateId = document.getElementById('asgn-template').value;
   const dueDate    = document.getElementById('asgn-due').value;
-  if (!title || !templateId || !dueDate) { toast('Fill in title, class, and due date','error'); return; }
+  if (!title)      { toast('Title is required', 'error'); return; }
+  if (!templateId) { toast('Select a class', 'error'); return; }
+  if (!dueDate)    { toast('Due date is required', 'error'); return; }
+
   try {
-    await API.createAssignment({
-      title,
-      templateId,
-      dueDate,
-      maxScore: parseFloat(document.getElementById('asgn-max').value)||100,
-      type:     document.getElementById('asgn-type').value,
+    const res = await API.createAssignment({
+      title, templateId,
+      dueDate:     dueDate + (dueDate.includes('T') ? '' : 'T23:59:00'),
+      maxScore:    parseFloat(document.getElementById('asgn-max').value) || 100,
+      type:        document.getElementById('asgn-type').value,
+      allowLate:   document.getElementById('asgn-allow-late').checked,
       description: document.getElementById('asgn-desc').value.trim() || null,
     });
-    toast('✅ Assignment created');
+    if (andPublish) {
+      await API.publishAssignment(res.id);
+      toast('✅ Assignment created and published');
+    } else {
+      toast('✅ Assignment saved as draft');
+    }
+    // Reset form
+    ['asgn-title','asgn-max','asgn-desc','asgn-due'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('asgn-allow-late').checked = false;
     loadAssignments();
-  } catch(e) { toast(`Error: ${e.message}`, 'error'); }
+  } catch(e) { toast(e.message || 'Failed to create assignment', 'error'); }
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
+function switchResultsTab(tab) {
+  ['view','record','class'].forEach(t => {
+    document.getElementById('results-tab-'+t).style.display = t===tab ? '' : 'none';
+    document.querySelector(`[data-rtab="${t}"]`).classList.toggle('active', t===tab);
+  });
+  if (tab === 'record') initRecordTab();
+  if (tab === 'class')  initClassResultsTab();
+}
+
+function initRecordTab() {
+  // Populate class dropdown
+  const cl = document.getElementById('er-class');
+  if (cl.options.length <= 1 && allTemplates.length) {
+    cl.innerHTML = '<option value="">— Select a class —</option>' +
+      allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+  // Populate subject dropdown
+  const subSel = document.getElementById('er-subject');
+  if (subSel.options.length <= 1) {
+    API.getSubjects().then(subs => {
+      subSel.innerHTML = '<option value="">— Select (optional) —</option>' +
+        (Array.isArray(subs) ? subs : []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }).catch(() => {});
+  }
+  // Default exam date to today
+  const dateEl = document.getElementById('er-exam-date');
+  if (!dateEl.value) dateEl.value = today();
+}
+
+function initClassResultsTab() {
+  const cl = document.getElementById('cr-class');
+  if (cl.options.length <= 1 && allTemplates.length) {
+    cl.innerHTML = '<option value="">— Select —</option>' +
+      allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+}
+
+async function loadStudentsForExam() {
+  const classId = document.getElementById('er-class').value;
+  const el      = document.getElementById('er-students-list');
+  const sub     = document.getElementById('er-students-sub');
+  if (!classId) { el.innerHTML = '<div style="color:var(--gray-500);text-align:center;padding:20px;">Select a class above</div>'; return; }
+  el.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
+  try {
+    const enrollments = await API.getEnrollments(classId);
+    const active = (Array.isArray(enrollments) ? enrollments : []).filter(e => e.status === 'ACTIVE');
+    sub.textContent = active.length + ' students';
+    if (!active.length) { el.innerHTML = '<div style="color:var(--gray-500);padding:16px;">No enrolled students</div>'; return; }
+    el.innerHTML = `<table style="width:100%;">
+      <thead><tr><th>Student</th><th>Score</th><th>Notes</th></tr></thead>
+      <tbody>${active.map(e => `
+        <tr>
+          <td><div style="font-weight:600;">${e.studentName}</div><div style="font-size:11px;color:var(--gray-500);">${e.studentRef||''}</div></td>
+          <td><input type="number" class="form-input" style="width:90px;padding:4px 8px;font-size:13px;"
+            id="er-score-${e.studentId}" min="0" placeholder="—" data-student-id="${e.studentId}"></td>
+          <td><input type="text" class="form-input" style="font-size:12px;padding:4px 8px;"
+            id="er-note-${e.studentId}" placeholder="Optional note"></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch(e) { el.innerHTML = `<div style="color:var(--danger);padding:16px;">${e.message}</div>`; }
+}
+
+async function submitBulkResults() {
+  const examName  = document.getElementById('er-exam-name').value.trim();
+  const examDate  = document.getElementById('er-exam-date').value;
+  const maxScore  = parseFloat(document.getElementById('er-max-score').value);
+  const classId   = document.getElementById('er-class').value;
+  const subjectId = document.getElementById('er-subject').value || null;
+  const subLabel  = document.getElementById('er-subject-label').value.trim() || null;
+  const examType  = document.getElementById('er-exam-type').value;
+
+  if (!examName)     { toast('Exam name is required', 'error'); return; }
+  if (!examDate)     { toast('Exam date is required', 'error'); return; }
+  if (!maxScore||maxScore<=0) { toast('Max score must be greater than 0', 'error'); return; }
+
+  // Collect filled-in scores
+  const scoreInputs = document.querySelectorAll('#er-students-list [data-student-id]');
+  const scores = [];
+  scoreInputs.forEach(inp => {
+    if (inp.value === '') return;
+    const studentId = inp.dataset.studentId;
+    const noteEl    = document.getElementById(`er-note-${studentId}`);
+    scores.push({ studentId, score: parseFloat(inp.value), notes: noteEl?.value.trim() || null });
+  });
+
+  if (!scores.length) { toast('Enter at least one score', 'error'); return; }
+
+  try {
+    const res = await API.bulkRecordResult({
+      examName, examType, examDate, maxScore,
+      templateId:   classId   || null,
+      subjectId:    subjectId || null,
+      subjectLabel: subLabel  || null,
+      scores,
+    });
+    toast(`✅ ${res.length} result(s) recorded`);
+    // Clear scores
+    scoreInputs.forEach(inp => { inp.value = ''; });
+    document.querySelectorAll('#er-students-list input[type=text]').forEach(inp => { inp.value = ''; });
+  } catch(e) { toast(e.message || 'Failed to save results', 'error'); }
+}
+
+async function loadClassResults() {
+  const classId  = document.getElementById('cr-class').value;
+  const examName = document.getElementById('cr-exam-name').value.trim();
+  const tbody    = document.getElementById('cr-results-body');
+  if (!classId) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;"><span class="spinner-inline"></span></td></tr>';
+  try {
+    const list = await API.getClassResults(classId, examName || null);
+    const arr  = Array.isArray(list) ? list : [];
+    tbody.innerHTML = arr.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-500);">No results found</td></tr>'
+      : arr.map(r => `
+          <tr>
+            <td><div style="font-weight:600;">${r.studentName||'—'}</div><div style="font-size:11px;color:var(--gray-500);">${r.studentRef||''}</div></td>
+            <td style="font-size:12px;">${r.subjectName||r.subjectLabel||'—'}</td>
+            <td>${r.examName||'—'}</td>
+            <td style="font-size:12px;">${fmtDate(r.examDate)}</td>
+            <td style="font-weight:700;">${r.score??'—'}${r.maxScore?' / '+r.maxScore:''}</td>
+            <td><span class="badge badge-${r.grade?.startsWith('A')?'success':r.grade?.startsWith('B')?'primary':r.grade?.startsWith('C')?'warning':'danger'}">${r.grade||'—'}</span></td>
+          </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
+  }
+}
+
 async function searchStudentsForResults() {
   const q = document.getElementById('results-search').value.trim();
-  if (!q) return;
   const listEl = document.getElementById('results-student-list');
+  if (!q) { listEl.innerHTML = ''; return; }
   try {
-    const res = await API.getStudents({ name: q, size: 5 });
+    const res = await API.getStudents({ name: q, size: 8 });
     const list = Array.isArray(res) ? res : (res?.content || []);
     listEl.innerHTML = list.map(s => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="loadStudentResults('${s.id}','${s.fullName.replace(/'/g,"\\'")}')">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;cursor:pointer;"
+           onclick="loadStudentResults('${s.id}','${s.fullName.replace(/'/g,"\\'")}')">
         <div class="student-av" style="background:${avatarColor(s.fullName)}">${initials(s.fullName)}</div>
         <div><div style="font-weight:600;">${s.fullName}</div><div style="font-size:12px;color:var(--gray-500);">${s.studentRef} · ${s.currentGrade||'—'}</div></div>
       </div>`).join('');
@@ -1079,6 +1878,8 @@ async function searchStudentsForResults() {
 }
 
 async function loadStudentResults(id, name) {
+  document.getElementById('results-student-list').innerHTML = '';
+  document.getElementById('results-search').value = '';
   const el = document.getElementById('results-content');
   el.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
   try {
@@ -1090,23 +1891,26 @@ async function loadStudentResults(id, name) {
     el.innerHTML = `
       <div class="profile-hero" style="margin-top:16px;">
         <div class="profile-av">${initials(name)}</div>
-        <div>
+        <div style="flex:1;">
           <div style="font-size:20px;font-weight:800;">${name}</div>
           ${report ? `<div style="opacity:.8;font-size:13px;">${report.currentGrade||''} · ${report.schoolName||''}</div>` : ''}
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">Exam Results</div></div>
+        <div class="card-header">
+          <div class="card-title">Exam Results</div>
+          <button class="btn btn-primary btn-sm" onclick="switchResultsTab('record');document.getElementById('er-class').dispatchEvent(new Event('change'))">+ Record Result</button>
+        </div>
         <div class="table-wrap">
           <table><thead><tr><th>Subject</th><th>Exam</th><th>Date</th><th>Score</th><th>Grade</th></tr></thead>
           <tbody>${resultList.length === 0
-            ? '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gray-500);">No results recorded</td></tr>'
+            ? '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gray-500);">No results recorded yet</td></tr>'
             : resultList.map(r => `
                 <tr>
-                  <td>${r.subjectName||'—'}</td>
+                  <td>${r.subjectName||r.subjectLabel||'—'}</td>
                   <td>${r.examName||'—'}</td>
                   <td>${fmtDate(r.examDate)}</td>
-                  <td>${r.score ?? '—'}${r.maxScore ? ' / '+r.maxScore : ''}</td>
+                  <td style="font-weight:700;">${r.score??'—'}${r.maxScore?' / '+r.maxScore:''}</td>
                   <td><span class="badge badge-${r.grade?.startsWith('A')?'success':r.grade?.startsWith('B')?'primary':r.grade?.startsWith('C')?'warning':'danger'}">${r.grade||'—'}</span></td>
                 </tr>`).join('')}
           </tbody></table>
@@ -1124,29 +1928,100 @@ async function loadTimetable() {
   try {
     const templates = await API.getTemplates();
     const list = Array.isArray(templates) ? templates : [];
-    const days = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    const days = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
     const byDay = {};
     days.forEach(d => byDay[d] = []);
     list.forEach(t => { if (byDay[t.dayOfWeek]) byDay[t.dayOfWeek].push(t); });
 
+    const activeDays = days.filter(d => byDay[d].length > 0);
     const colors = ['#4F46E5','#7C3AED','#0891B2','#059669','#D97706','#EF4444'];
     let ci = 0;
 
-    el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(${days.filter(d=>byDay[d].length>0).length},1fr);gap:12px;">` +
-      days.filter(d => byDay[d].length > 0).map(d => `
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px;">${d.slice(0,3)}</div>
-          ${byDay[d].map(t => {
-            const c = colors[ci++ % colors.length];
-            return `<div style="background:${c};color:white;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
-              <div style="font-weight:700;">${t.name}</div>
-              <div style="opacity:.85;">${t.startTime?.slice(0,5)} – ${t.endTime?.slice(0,5)}</div>
-              <div style="opacity:.8;">${t.enrolledCount}/${t.maxCapacity} students</div>
-            </div>`;
-          }).join('')}
-        </div>`).join('') + '</div>';
+    el.innerHTML = activeDays.length === 0
+      ? '<div style="color:var(--gray-500);text-align:center;padding:20px;">No active classes. Add a class first.</div>'
+      : `<div style="display:grid;grid-template-columns:repeat(${activeDays.length},1fr);gap:12px;">` +
+        activeDays.map(d => `
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:8px;">${d.slice(0,3)}</div>
+            ${byDay[d].map(t => {
+              const c = colors[ci++ % colors.length];
+              return `<div style="background:${c};color:white;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;cursor:pointer;"
+                onclick="filterSessionsByClass('${t.id}','${t.name.replace(/'/g,"\\'")}')">
+                <div style="font-weight:700;">${t.name}</div>
+                <div style="opacity:.85;">${t.startTime?.slice(0,5)} – ${t.endTime?.slice(0,5)}</div>
+                <div style="opacity:.8;">${t.enrolledCount}/${t.maxCapacity} students</div>
+              </div>`;
+            }).join('')}
+          </div>`).join('') + '</div>';
+
+    // Populate sessions-list class dropdown
+    const slClass = document.getElementById('sl-class');
+    slClass.innerHTML = '<option value="">All Classes</option>' +
+      list.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+    // Set default date range: today → +30 days
+    const slFrom = document.getElementById('sl-from');
+    const slTo   = document.getElementById('sl-to');
+    if (!slFrom.value) slFrom.value = today();
+    if (!slTo.value)   slTo.value   = addDays(today(), 30);
+
+    loadSessionsList();
   } catch(e) {
     el.innerHTML = `<div style="color:var(--danger);">Error: ${e.message}</div>`;
+  }
+}
+
+function filterSessionsByClass(classId, className) {
+  document.getElementById('sl-class').value = classId;
+  document.getElementById('sl-from').value  = addDays(today(), -30);
+  document.getElementById('sl-to').value    = addDays(today(), 60);
+  loadSessionsList();
+  document.getElementById('sessions-list-body').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function loadSessionsList() {
+  const classId = document.getElementById('sl-class').value;
+  const from    = document.getElementById('sl-from').value;
+  const to      = document.getElementById('sl-to').value;
+  const tbody   = document.getElementById('sessions-list-body');
+  const sub     = document.getElementById('sessions-list-sub');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;"><span class="spinner-inline"></span></td></tr>';
+
+  try {
+    let sessions = [];
+    if (classId) {
+      const res = await API.getSessions(classId, from || today(), to || addDays(today(), 30));
+      sessions = Array.isArray(res) ? res : [];
+    } else {
+      const res = await API.getUpcomingSessions(from || today());
+      sessions = Array.isArray(res) ? res : [];
+      if (to) sessions = sessions.filter(s => s.sessionDate <= to);
+    }
+
+    sub.textContent = sessions.length + ' session' + (sessions.length !== 1 ? 's' : '');
+
+    if (!sessions.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray-500);">No sessions found. Click 🔄 Generate Sessions to create them.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = sessions.map(s => `
+      <tr>
+        <td><strong>${s.sessionDate}</strong></td>
+        <td>${s.templateName}</td>
+        <td style="color:var(--gray-500);font-size:12px;">${s.subjectName||'—'}</td>
+        <td>${s.startTime?.slice(0,5)||'—'} – ${s.endTime?.slice(0,5)||'—'}</td>
+        <td><span class="badge badge-${s.status==='COMPLETED'?'success':s.status==='CANCELLED'?'danger':'primary'}">${s.status}</span></td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            ${s.status!=='COMPLETED' ? `<button class="btn btn-sm btn-success" onclick="setSessionStatus('${s.id}','COMPLETED','timetable')">✓ Done</button>` : ''}
+            ${s.status==='SCHEDULED'  ? `<button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;" onclick="setSessionStatus('${s.id}','CANCELLED','timetable')">✕ Cancel</button>` : ''}
+            ${s.status!=='SCHEDULED'  ? `<button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="setSessionStatus('${s.id}','SCHEDULED','timetable')">↩ Reset</button>` : ''}
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
   }
 }
 
@@ -1159,8 +2034,1225 @@ async function triggerSessionGeneration() {
   } catch(e) { toast(`Error: ${e.message}`, 'error'); }
 }
 
+// ── Subjects ──────────────────────────────────────────────────────────────────
+let _editSubjectId = null;
+
+async function loadSubjects() {
+  const tbody      = document.getElementById('subject-table');
+  const showAll    = document.getElementById('subject-show-inactive').checked;
+  tbody.innerHTML  = '<tr><td colspan="5" class="loading"><span class="spinner-inline"></span></td></tr>';
+  try {
+    const list = await API.getSubjects(!showAll);
+    const arr  = Array.isArray(list) ? list : [];
+    document.getElementById('subject-count').textContent = arr.length + ' subject' + (arr.length!==1?'s':'');
+    tbody.innerHTML = arr.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--gray-500);">No subjects yet</td></tr>'
+      : arr.map(s => `
+          <tr>
+            <td><strong>${s.name}</strong></td>
+            <td><span class="badge badge-primary">${s.code}</span></td>
+            <td style="font-size:12px;color:var(--gray-500);">${s.description||'—'}</td>
+            <td><span class="badge badge-${s.active?'success':'gray'}">${s.active?'Active':'Inactive'}</span></td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm btn-outline" onclick='openSubjectForm(${JSON.stringify(s)})'>✏ Edit</button>
+                <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;"
+                  onclick="deleteSubjectRecord('${s.id}','${s.name.replace(/'/g,"\\'")}')">Delete</button>
+              </div>
+            </td>
+          </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
+  }
+}
+
+function openSubjectForm(sub = null) {
+  _editSubjectId = sub?.id || null;
+  document.getElementById('subject-form-title').textContent = sub ? 'Edit Subject' : 'Add Subject';
+  document.getElementById('sbf-name').value   = sub?.name        || '';
+  document.getElementById('sbf-code').value   = sub?.code        || '';
+  document.getElementById('sbf-desc').value   = sub?.description || '';
+  document.getElementById('sbf-active').checked = sub ? sub.active !== false : true;
+  document.getElementById('subject-form').style.display = 'block';
+  document.getElementById('subject-form').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function closeSubjectForm() {
+  document.getElementById('subject-form').style.display = 'none';
+  _editSubjectId = null;
+}
+
+async function submitSubjectForm() {
+  const name = document.getElementById('sbf-name').value.trim();
+  const code = document.getElementById('sbf-code').value.trim().toUpperCase();
+  if (!name) { toast('Name is required', 'error'); return; }
+  if (!code) { toast('Code is required', 'error'); return; }
+  const payload = {
+    name, code,
+    description: document.getElementById('sbf-desc').value.trim() || null,
+    active:      document.getElementById('sbf-active').checked,
+  };
+  try {
+    if (_editSubjectId) {
+      await API.updateSubject(_editSubjectId, payload);
+      toast('✅ Subject updated');
+    } else {
+      await API.createSubject(payload);
+      toast('✅ Subject created');
+    }
+    closeSubjectForm();
+    loadSubjects();
+  } catch(e) { toast(e.message || 'Failed to save subject', 'error'); }
+}
+
+async function deleteSubjectRecord(id, name) {
+  if (!confirm(`Delete subject "${name}"?\nIt cannot be deleted if it is linked to active classes.`)) return;
+  try {
+    await API.deleteSubject(id);
+    toast(`"${name}" deleted`);
+    loadSubjects();
+  } catch(e) { toast(e.message || 'Failed to delete', 'error'); }
+}
+
+// ── Public Holidays ───────────────────────────────────────────────────────────
+async function loadHolidays() {
+  // Populate year selector
+  const yearSel = document.getElementById('holiday-year');
+  const thisYear = new Date().getFullYear();
+  if (yearSel.options.length === 0) {
+    for (let y = thisYear - 1; y <= thisYear + 2; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === thisYear) opt.selected = true;
+      yearSel.appendChild(opt);
+    }
+  }
+  const year = parseInt(yearSel.value) || thisYear;
+  const tbody = document.getElementById('holiday-table');
+  tbody.innerHTML = '<tr><td colspan="4" class="loading"><span class="spinner-inline"></span></td></tr>';
+  try {
+    const list = await API.getHolidays(year);
+    const arr  = Array.isArray(list) ? list : [];
+    tbody.innerHTML = arr.length === 0
+      ? `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-500);">No holidays for ${year}</td></tr>`
+      : arr.map(h => `
+          <tr>
+            <td><strong>${h.date}</strong></td>
+            <td>${h.name}</td>
+            <td><span class="badge badge-primary">${h.type||'PUBLIC'}</span></td>
+            <td>
+              <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;"
+                onclick="deleteHolidayRecord('${h.id}','${h.name.replace(/'/g,"\\'")}')">Delete</button>
+            </td>
+          </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
+  }
+}
+
+function openHolidayForm() {
+  document.getElementById('hf-date').value = today();
+  document.getElementById('hf-name').value = '';
+  document.getElementById('hf-desc').value = '';
+  document.getElementById('holiday-form').style.display = 'block';
+  document.getElementById('holiday-form').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function submitHoliday() {
+  const date = document.getElementById('hf-date').value;
+  const name = document.getElementById('hf-name').value.trim();
+  if (!date) { toast('Date is required', 'error'); return; }
+  if (!name) { toast('Holiday name is required', 'error'); return; }
+  try {
+    await API.addHoliday({
+      date, name,
+      type:        document.getElementById('hf-type').value,
+      description: document.getElementById('hf-desc').value.trim() || null,
+    });
+    toast('✅ Holiday added');
+    document.getElementById('holiday-form').style.display = 'none';
+    loadHolidays();
+  } catch(e) { toast(e.message || 'Failed to add holiday', 'error'); }
+}
+
+async function deleteHolidayRecord(id, name) {
+  if (!confirm(`Delete holiday "${name}"?`)) return;
+  try {
+    await API.deleteHoliday(id);
+    toast(`"${name}" deleted`);
+    loadHolidays();
+  } catch(e) { toast(e.message || 'Failed to delete', 'error'); }
+}
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+function initReports() {
+  // Populate branch dropdowns
+  ['rpt-fin-branch','rpt-att-branch','rpt-acad-branch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.options.length <= 1) {
+      el.innerHTML = '<option value="">All Branches</option>' +
+        allBranches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    }
+  });
+  // Default date ranges
+  const firstOfYear = new Date().getFullYear() + '-01-01';
+  const todayStr    = today();
+  const thisMonth   = todayStr.slice(0,7);
+  const janMonth    = new Date().getFullYear() + '-01';
+  if (!document.getElementById('rpt-fin-from').value)   document.getElementById('rpt-fin-from').value   = janMonth;
+  if (!document.getElementById('rpt-fin-to').value)     document.getElementById('rpt-fin-to').value     = thisMonth;
+  if (!document.getElementById('rpt-att-from').value)   document.getElementById('rpt-att-from').value   = firstOfYear;
+  if (!document.getElementById('rpt-att-to').value)     document.getElementById('rpt-att-to').value     = todayStr;
+  if (!document.getElementById('rpt-acad-from').value)  document.getElementById('rpt-acad-from').value  = firstOfYear;
+  if (!document.getElementById('rpt-acad-to').value)    document.getElementById('rpt-acad-to').value    = todayStr;
+}
+
+function switchReportTab(tab) {
+  ['financial','attendance','academic'].forEach(t => {
+    document.getElementById('report-tab-'+t).style.display = t===tab ? '' : 'none';
+    document.querySelector(`[data-rptab="${t}"]`).classList.toggle('active', t===tab);
+  });
+}
+
+async function loadFinancialReport() {
+  const from     = document.getElementById('rpt-fin-from').value;
+  const to       = document.getElementById('rpt-fin-to').value;
+  const branchId = document.getElementById('rpt-fin-branch').value || null;
+  if (!from || !to) { toast('Select a date range', 'error'); return; }
+  toast('Generating financial report…');
+  try {
+    const r    = await API.getFinancialReport(from+'-01', to+'-01', branchId);
+    const wrap = document.getElementById('rpt-fin-summary');
+    const tWrap = document.getElementById('rpt-fin-table-wrap');
+    wrap.style.display  = '';
+    tWrap.style.display = '';
+    document.getElementById('rpt-fin-generated').textContent   = fmtMoney(r.totalGenerated);
+    document.getElementById('rpt-fin-collected').textContent   = fmtMoney(r.totalCollected);
+    document.getElementById('rpt-fin-outstanding').textContent = fmtMoney(r.totalOutstanding);
+    document.getElementById('rpt-fin-rate').textContent        = (r.overallCollectionRate||0).toFixed(1) + '%';
+    const months = Array.isArray(r.months) ? r.months : [];
+    document.getElementById('rpt-fin-body').innerHTML = months.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--gray-500);">No data</td></tr>'
+      : months.map(m => `
+          <tr>
+            <td><strong>${m.billingMonth||m.month}</strong></td>
+            <td>${fmtMoney(m.totalGenerated)}</td>
+            <td style="color:var(--success);font-weight:600;">${fmtMoney(m.totalCollected)}</td>
+            <td style="color:var(--danger);">${fmtMoney(m.totalOutstanding)}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;">
+              <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${Math.min(m.collectionRate||0,100)}%;"></div></div>
+              <span style="font-size:12px;font-weight:600;">${(m.collectionRate||0).toFixed(1)}%</span>
+            </div></td>
+            <td style="font-size:12px;">${m.recordCount||0}</td>
+          </tr>`).join('');
+    toast('');
+  } catch(e) { toast(e.message || 'Failed to generate report', 'error'); }
+}
+
+async function loadAttendanceReport() {
+  const from      = document.getElementById('rpt-att-from').value;
+  const to        = document.getElementById('rpt-att-to').value;
+  const branchId  = document.getElementById('rpt-att-branch').value || null;
+  const threshold = parseInt(document.getElementById('rpt-att-threshold').value) || 80;
+  if (!from || !to) { toast('Select a date range', 'error'); return; }
+  toast('Generating attendance report…');
+  try {
+    const r = await API.getAttendanceReport(from, to, branchId, threshold);
+    document.getElementById('rpt-att-summary').style.display = '';
+    document.getElementById('rpt-att-tables').style.display  = '';
+    const total = r.totalMarked || 0;
+    const rate  = total > 0 ? ((r.totalPresent + r.totalLate) / total * 100).toFixed(1) : '—';
+    document.getElementById('rpt-att-total').textContent   = total;
+    document.getElementById('rpt-att-present').textContent = r.totalPresent || 0;
+    document.getElementById('rpt-att-absent').textContent  = r.totalAbsent  || 0;
+    document.getElementById('rpt-att-rate').textContent    = rate + (rate!=='—'?'%':'');
+    const classes = Array.isArray(r.classes) ? r.classes : [];
+    document.getElementById('rpt-att-classes').innerHTML = classes.length === 0
+      ? '<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gray-500);">No data</td></tr>'
+      : classes.map(c => {
+          const classRate = c.totalMarked > 0 ? ((c.present+c.late)/c.totalMarked*100).toFixed(1) : '—';
+          return `<tr>
+            <td><strong>${c.className}</strong></td>
+            <td style="font-size:12px;">${c.subjectName||'—'}</td>
+            <td style="font-size:12px;">${c.dayOfWeek||'—'}</td>
+            <td>${c.totalMarked}</td>
+            <td style="color:var(--success);">${c.present}</td>
+            <td style="color:var(--danger);">${c.absent}</td>
+            <td style="color:var(--warning);">${c.late}</td>
+            <td><strong>${classRate}${classRate!=='—'?'%':''}</strong></td>
+          </tr>`;
+        }).join('');
+    const low = Array.isArray(r.lowAttendanceStudents) ? r.lowAttendanceStudents : [];
+    const lowWrap = document.getElementById('rpt-att-low-wrap');
+    lowWrap.style.display = low.length ? '' : 'none';
+    document.getElementById('rpt-att-low').innerHTML = low.map(s => `
+      <tr>
+        <td><strong>${s.studentName}</strong></td>
+        <td style="font-size:12px;">${s.className||'—'}</td>
+        <td style="color:var(--danger);font-weight:700;">${(s.attendanceRate||0).toFixed(1)}%</td>
+        <td>${s.attended||0}/${s.total||0}</td>
+      </tr>`).join('');
+    toast('');
+  } catch(e) { toast(e.message || 'Failed to generate report', 'error'); }
+}
+
+async function loadAcademicReport() {
+  const from     = document.getElementById('rpt-acad-from').value;
+  const to       = document.getElementById('rpt-acad-to').value;
+  const branchId = document.getElementById('rpt-acad-branch').value || null;
+  if (!from || !to) { toast('Select a date range', 'error'); return; }
+  toast('Generating academic report…');
+  try {
+    const r = await API.getAcademicReport(from, to, branchId);
+    document.getElementById('rpt-acad-summary').style.display = '';
+    document.getElementById('rpt-acad-total').textContent = r.totalExams || 0;
+    document.getElementById('rpt-acad-avg').textContent   = (r.overallAveragePercentage||0).toFixed(1) + '%';
+    document.getElementById('rpt-acad-grade').textContent = r.overallAverageGrade || '—';
+    const subjects = Array.isArray(r.subjects) ? r.subjects : [];
+    document.getElementById('rpt-acad-body').innerHTML = subjects.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--gray-500);">No data</td></tr>'
+      : subjects.map(s => {
+          const dist = s.gradeDistribution || {};
+          const distStr = Object.entries(dist).map(([g,c]) => `${g}:${c}`).join(' · ');
+          return `<tr>
+            <td><strong>${s.subjectName||s.subjectLabel||'—'}</strong></td>
+            <td>${s.totalExams||0}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;">
+              <div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:${Math.min(s.averagePercentage||0,100)}%;background:${(s.averagePercentage||0)>=80?'var(--success)':(s.averagePercentage||0)>=50?'var(--warning)':'var(--danger)'};"></div></div>
+              <span style="font-size:12px;font-weight:600;">${(s.averagePercentage||0).toFixed(1)}%</span>
+            </div></td>
+            <td><span class="badge badge-${s.averageGrade?.startsWith('A')?'success':s.averageGrade?.startsWith('B')?'primary':s.averageGrade?.startsWith('C')?'warning':'danger'}">${s.averageGrade||'—'}</span></td>
+            <td>${(s.passRate||0).toFixed(1)}%</td>
+            <td style="font-size:11px;color:var(--gray-500);">${distStr||'—'}</td>
+          </tr>`;
+        }).join('');
+    toast('');
+  } catch(e) { toast(e.message || 'Failed to generate report', 'error'); }
+}
+
+// ── Session status ────────────────────────────────────────────────────────────
+async function setSessionStatus(sessionId, status, context) {
+  const labels = { COMPLETED: 'mark as completed', CANCELLED: 'cancel', SCHEDULED: 'reset to scheduled' };
+  let notes = null;
+  if (status === 'CANCELLED') {
+    notes = prompt(`Cancel session — enter a reason (optional):`);
+    if (notes === null) return; // user pressed Cancel on prompt
+  }
+  try {
+    await API.updateSessionStatus(sessionId, status, notes);
+    toast(`✅ Session ${labels[status] || status}`);
+    if (context === 'timetable') loadSessionsList();
+    else filterAttendanceSessions();
+  } catch(e) { toast(e.message || 'Failed to update session', 'error'); }
+}
+
+// ── Branches ──────────────────────────────────────────────────────────────────
+let _editBranchId = null;
+
+async function loadBranches() {
+  const tbody = document.getElementById('branch-table');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading"><span class="spinner-inline"></span></td></tr>';
+  try {
+    const list = await API.getBranches();
+    const arr  = Array.isArray(list) ? list : (list?.content || []);
+    document.getElementById('branch-count').textContent = arr.length + ' branch' + (arr.length !== 1 ? 'es' : '');
+    // Refresh global branches list for other dropdowns
+    allBranches = arr;
+    populateBranchSelects();
+
+    tbody.innerHTML = arr.length === 0
+      ? '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gray-500);">No branches yet. Add your first branch to get started.</td></tr>'
+      : arr.map(b => `
+          <tr>
+            <td><div style="font-weight:700;">${b.name}</div></td>
+            <td><span class="badge badge-primary">${b.code}</span></td>
+            <td>${b.phone || '—'}</td>
+            <td>${b.email || '—'}</td>
+            <td style="font-size:12px;color:var(--gray-500);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.address || '—'}</td>
+            <td><span class="badge badge-${b.active ? 'success' : 'gray'}">${b.active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm btn-outline" onclick='openBranchForm(${JSON.stringify(b)})'>✏ Edit</button>
+                ${b.active
+                  ? `<button class="btn btn-sm" style="background:#FEF3C7;color:#92400E;border:none;" onclick="deactivateBranch('${b.id}','${b.name.replace(/'/g,"\\'")}')">Deactivate</button>`
+                  : `<button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;border:none;" onclick="reactivateBranch('${b.id}','${b.name.replace(/'/g,"\\'")}')">Reactivate</button>`}
+                <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;" onclick="deleteBranch('${b.id}','${b.name.replace(/'/g,"\\'")}')">Delete</button>
+              </div>
+            </td>
+          </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:16px;">${e.message}</td></tr>`;
+  }
+}
+
+function openBranchForm(branch = null) {
+  _editBranchId = branch?.id || null;
+  document.getElementById('branch-form-title').textContent = branch ? 'Edit Branch' : 'Add Branch';
+  document.getElementById('bf-name').value    = branch?.name    || '';
+  document.getElementById('bf-code').value    = branch?.code    || '';
+  document.getElementById('bf-phone').value   = branch?.phone   || '';
+  document.getElementById('bf-email').value   = branch?.email   || '';
+  document.getElementById('bf-address').value = branch?.address || '';
+  document.getElementById('branch-form').style.display = 'block';
+  document.getElementById('branch-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closeBranchForm() {
+  document.getElementById('branch-form').style.display = 'none';
+  _editBranchId = null;
+}
+
+async function submitBranchForm() {
+  const name    = document.getElementById('bf-name').value.trim();
+  const code    = document.getElementById('bf-code').value.trim().toUpperCase();
+  const phone   = document.getElementById('bf-phone').value.trim();
+  const email   = document.getElementById('bf-email').value.trim();
+  const address = document.getElementById('bf-address').value.trim();
+
+  if (!name) { toast('Branch name is required', 'error'); return; }
+  if (!code) { toast('Branch code is required', 'error'); return; }
+
+  const payload = { name, code, phone: phone || null, email: email || null, address: address || null };
+
+  try {
+    if (_editBranchId) {
+      await API.updateBranch(_editBranchId, payload);
+      toast('✅ Branch updated');
+    } else {
+      await API.createBranch(payload);
+      toast('✅ Branch created');
+    }
+    closeBranchForm();
+    loadBranches();
+  } catch(e) {
+    toast(e.message || 'Failed to save branch', 'error');
+  }
+}
+
+async function deactivateBranch(id, name) {
+  if (!confirm(`Deactivate "${name}"?\nIt will be hidden from active lists but all data is kept.`)) return;
+  try {
+    await API.deactivateBranch(id);
+    toast(`"${name}" deactivated`);
+    loadBranches();
+  } catch(e) { toast(e.message || 'Failed to deactivate', 'error'); }
+}
+
+async function reactivateBranch(id, name) {
+  // Reactivate by updating the branch with active:true
+  try {
+    const branches = await API.getBranches();
+    const all = Array.isArray(branches) ? branches : [];
+    // GET all includes inactive — find it
+    const b = all.find(x => x.id === id);
+    if (!b) { toast('Branch not found', 'error'); return; }
+    await API.updateBranch(id, { name: b.name, code: b.code, phone: b.phone, email: b.email, address: b.address, active: true });
+    toast(`"${name}" reactivated`);
+    loadBranches();
+  } catch(e) { toast(e.message || 'Failed to reactivate', 'error'); }
+}
+
+async function deleteBranch(id, name) {
+  if (!confirm(`Permanently delete "${name}"?\nThis cannot be undone. The branch must have no active students or classes.`)) return;
+  try {
+    await API.deleteBranch(id);
+    toast(`"${name}" deleted`);
+    loadBranches();
+  } catch(e) { toast(e.message || 'Failed to delete branch', 'error'); }
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 init();
+</script>
+
+<!-- ══════ STUDENT PROFILE MODAL ══════ -->
+<div id="student-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;">
+  <div style="background:white;border-radius:16px;width:680px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);border-radius:16px 16px 0 0;padding:24px;display:flex;align-items:center;gap:16px;position:relative;">
+      <div id="sm-avatar" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:white;border:2px solid rgba(255,255,255,.4);flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div id="sm-name" style="font-size:20px;font-weight:800;color:white;"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+          <span id="sm-ref"  style="background:rgba(255,255,255,.2);color:white;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;"></span>
+          <span id="sm-grade" style="background:rgba(255,255,255,.2);color:white;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;"></span>
+          <span id="sm-status-badge" style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;"></span>
+        </div>
+      </div>
+      <button onclick="closeStudentModal()" style="position:absolute;top:16px;right:16px;border:none;background:rgba(255,255,255,.2);color:white;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--gray-200);padding:0 24px;gap:4px;">
+      <button class="sm-tab active" data-tab="profile"  onclick="switchStudentTab('profile')">Profile</button>
+      <button class="sm-tab"        data-tab="parents"  onclick="switchStudentTab('parents')">Parents</button>
+      <button class="sm-tab"        data-tab="classes"  onclick="switchStudentTab('classes')">Classes</button>
+      <button class="sm-tab"        data-tab="actions"  onclick="switchStudentTab('actions')">Actions</button>
+    </div>
+
+    <div style="padding:24px;">
+
+      <!-- PROFILE TAB -->
+      <div id="sm-tab-profile">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="sm-fullname"></div>
+          <div class="form-group"><label class="form-label">Preferred Name</label><input class="form-input" id="sm-preferred" placeholder="Optional nickname"></div>
+          <div class="form-group"><label class="form-label">IC Number</label><input class="form-input" id="sm-ic"></div>
+          <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" id="sm-dob" type="date"></div>
+          <div class="form-group"><label class="form-label">Gender</label>
+            <select class="form-select" id="sm-gender">
+              <option value="MALE">Male</option><option value="FEMALE">Female</option><option value="UNSPECIFIED">Unspecified</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Nationality</label><input class="form-input" id="sm-nationality"></div>
+          <div class="form-group"><label class="form-label">Grade</label>
+            <select class="form-select" id="sm-grade-sel">
+              <option value="Form 1">Form 1</option><option value="Form 2">Form 2</option><option value="Form 3">Form 3</option>
+              <option value="Form 4">Form 4</option><option value="Form 5">Form 5</option>
+              <option value="Year 1">Year 1</option><option value="Year 2">Year 2</option><option value="Year 3">Year 3</option>
+              <option value="Year 4">Year 4</option><option value="Year 5">Year 5</option><option value="Year 6">Year 6</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">School</label><input class="form-input" id="sm-school"></div>
+          <div class="form-group"><label class="form-label">Branch</label><select class="form-select" id="sm-branch"></select></div>
+          <div class="form-group" style="grid-column:span 2;"><label class="form-label">Notes</label><textarea class="form-input" id="sm-notes" rows="2" style="resize:none;"></textarea></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:4px;" onclick="saveStudentProfile()">✓ Save Changes</button>
+      </div>
+
+      <!-- PARENTS TAB -->
+      <div id="sm-tab-parents" style="display:none;">
+        <div id="sm-parents-list" style="margin-bottom:20px;"></div>
+        <div style="border-top:1px solid var(--gray-100);padding-top:16px;">
+          <div style="font-weight:700;font-size:13px;margin-bottom:12px;">Add Parent / Guardian</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="sp-name"></div>
+            <div class="form-group"><label class="form-label">Relationship</label>
+              <select class="form-select" id="sp-rel"><option value="PARENT">Parent</option><option value="GUARDIAN">Guardian</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Phone *</label><input class="form-input" id="sp-phone" placeholder="+60123456789"></div>
+            <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" id="sp-wa" placeholder="+60123456789"></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="sp-email" type="email"></div>
+            <div class="form-group"><label class="form-label">Language</label>
+              <select class="form-select" id="sp-lang"><option value="MS">Bahasa Malaysia</option><option value="EN">English</option><option value="ZH">Chinese</option><option value="TA">Tamil</option></select>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveNewParent()">+ Add Parent</button>
+        </div>
+      </div>
+
+      <!-- CLASSES TAB -->
+      <div id="sm-tab-classes" style="display:none;">
+        <div id="sm-classes-list"></div>
+      </div>
+
+      <!-- ACTIONS TAB -->
+      <div id="sm-tab-actions" style="display:none;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+
+          <div style="background:var(--gray-50);border-radius:10px;padding:16px;">
+            <div style="font-weight:700;margin-bottom:8px;">Change Status</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-sm btn-success"  onclick="changeStudentStatus('ACTIVE')">Set Active</button>
+              <button class="btn btn-sm btn-warning"  onclick="changeStudentStatus('INACTIVE')">Set Inactive</button>
+              <button class="btn btn-sm btn-danger"   onclick="changeStudentStatus('SUSPENDED')">Suspend</button>
+              <button class="btn btn-sm" style="background:#7C3AED;color:white;" onclick="changeStudentStatus('GRADUATED')">Graduated</button>
+            </div>
+          </div>
+
+          <div style="background:var(--gray-50);border-radius:10px;padding:16px;">
+            <div style="font-weight:700;margin-bottom:4px;">Parent Portal</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">Activates a login account for the primary parent to view their child's progress.</div>
+            <div id="sm-portal-status" style="margin-bottom:10px;"></div>
+            <button class="btn btn-primary btn-sm" id="sm-portal-btn" onclick="activateParentPortal()">Activate Portal</button>
+          </div>
+
+          <div style="background:#FEF2F2;border-radius:10px;padding:16px;border:1px solid #FECACA;">
+            <div style="font-weight:700;color:var(--danger);margin-bottom:4px;">Danger Zone</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">Soft-deletes the student record. All history is retained. OWNER only.</div>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudentRecord()">Delete Student</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.sm-tab { background:none;border:none;padding:12px 16px;font-size:13px;font-weight:600;color:var(--gray-500);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px; }
+.sm-tab:hover { color:var(--primary); }
+.sm-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
+</style>
+
+<script>
+let _studentModalId = null;
+let _studentModalData = null;
+
+async function openStudentModal(id) {
+  _studentModalId = id;
+  document.getElementById('student-modal').style.display = 'flex';
+  document.getElementById('sm-name').textContent    = 'Loading…';
+  document.getElementById('sm-ref').textContent     = '';
+  document.getElementById('sm-grade').textContent   = '';
+  switchStudentTab('profile');
+  await loadStudentModalData();
+}
+
+function closeStudentModal() {
+  document.getElementById('student-modal').style.display = 'none';
+  _studentModalId  = null;
+  _studentModalData = null;
+}
+
+async function loadStudentModalData() {
+  try {
+    const s = await API.getStudent(_studentModalId);
+    _studentModalData = s;
+
+    // Header
+    document.getElementById('sm-avatar').textContent  = initials(s.fullName);
+    document.getElementById('sm-name').textContent    = s.fullName;
+    document.getElementById('sm-ref').textContent     = s.studentRef || '';
+    document.getElementById('sm-grade').textContent   = s.currentGrade || '';
+    const sb = document.getElementById('sm-status-badge');
+    sb.textContent  = s.status;
+    sb.style.background = s.status==='ACTIVE' ? '#D1FAE5' : s.status==='GRADUATED' ? '#EDE9FE' : '#FEE2E2';
+    sb.style.color      = s.status==='ACTIVE' ? '#065F46' : s.status==='GRADUATED' ? '#5B21B6' : '#991B1B';
+
+    // Profile fields
+    document.getElementById('sm-fullname').value    = s.fullName || '';
+    document.getElementById('sm-preferred').value  = s.preferredName || '';
+    document.getElementById('sm-ic').value         = s.icNumber || '';
+    document.getElementById('sm-dob').value        = s.dateOfBirth || '';
+    document.getElementById('sm-gender').value     = s.gender || 'UNSPECIFIED';
+    document.getElementById('sm-nationality').value = s.nationality || 'Malaysian';
+    document.getElementById('sm-grade-sel').value  = s.currentGrade || 'Form 4';
+    document.getElementById('sm-school').value     = s.schoolName || '';
+    document.getElementById('sm-notes').value      = s.notes || '';
+
+    // Branch select
+    const brSel = document.getElementById('sm-branch');
+    brSel.innerHTML = allBranches.map(b => `<option value="${b.id}" ${b.id===s.branchId?'selected':''}>${b.name}</option>`).join('');
+
+    // Parents
+    renderParents(s.parents || []);
+
+    // Portal status
+    const portalBtn = document.getElementById('sm-portal-btn');
+    const portalStatus = document.getElementById('sm-portal-status');
+    if (s.portalAccountActive) {
+      portalStatus.innerHTML = '<span class="badge badge-success">Portal Active</span>';
+      portalBtn.textContent  = '✓ Already Active';
+      portalBtn.disabled     = true;
+    } else if (s.portalAccountExists) {
+      portalStatus.innerHTML = '<span class="badge badge-warning">Account exists but inactive</span>';
+      portalBtn.disabled = false;
+    } else {
+      portalStatus.innerHTML = '<span class="badge badge-gray">No portal account</span>';
+      portalBtn.disabled = false;
+    }
+
+  } catch(e) {
+    document.getElementById('sm-name').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderParents(parents) {
+  const el = document.getElementById('sm-parents-list');
+  if (!parents.length) { el.innerHTML = '<div style="color:var(--gray-500);">No parents on record</div>'; return; }
+  el.innerHTML = parents.map(p => `
+    <div style="background:var(--gray-50);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">${initials(p.fullName)}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;">${p.fullName} ${p.primary?'<span class="badge badge-primary" style="font-size:10px;">Primary</span>':''}</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px;">${p.relationship} · ${p.phone || '—'} · ${p.email || '—'}</div>
+        ${p.whatsappNumber ? `<div style="font-size:12px;color:#25D366;margin-top:2px;">📲 ${p.whatsappNumber}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function switchStudentTab(tab) {
+  ['profile','parents','classes','actions'].forEach(t => {
+    document.getElementById('sm-tab-'+t).style.display = t===tab ? '' : 'none';
+    document.querySelector(`.sm-tab[data-tab="${t}"]`).classList.toggle('active', t===tab);
+  });
+  if (tab === 'classes') loadStudentClasses();
+}
+
+async function loadStudentClasses() {
+  const el = document.getElementById('sm-classes-list');
+  el.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
+  try {
+    const list = await API.getStudentTimetable(_studentModalId);
+    const arr  = Array.isArray(list) ? list.filter(e => e.status === 'ACTIVE') : [];
+    if (!arr.length) { el.innerHTML = '<div style="color:var(--gray-500);padding:8px;">Not enrolled in any classes.</div>'; return; }
+    el.innerHTML = '<table><thead><tr><th>Class</th><th>Subject</th><th>Day / Time</th><th>Enrolled</th></tr></thead><tbody>' +
+      arr.map(e => `
+        <tr>
+          <td><strong>${e.templateName||'—'}</strong></td>
+          <td>${e.subjectName||'—'}</td>
+          <td>${e.dayOfWeek||'—'}</td>
+          <td>${e.enrolledDate||'—'}</td>
+        </tr>`).join('') + '</tbody></table>';
+  } catch(e) { el.innerHTML = `<div style="color:var(--danger);">${e.message}</div>`; }
+}
+
+async function saveStudentProfile() {
+  const payload = {
+    fullName:      document.getElementById('sm-fullname').value.trim(),
+    preferredName: document.getElementById('sm-preferred').value.trim() || null,
+    icNumber:      document.getElementById('sm-ic').value.trim() || null,
+    dateOfBirth:   document.getElementById('sm-dob').value || null,
+    gender:        document.getElementById('sm-gender').value,
+    nationality:   document.getElementById('sm-nationality').value.trim() || 'Malaysian',
+    currentGrade:  document.getElementById('sm-grade-sel').value,
+    schoolName:    document.getElementById('sm-school').value.trim() || null,
+    branchId:      document.getElementById('sm-branch').value || null,
+    notes:         document.getElementById('sm-notes').value.trim() || null,
+  };
+  if (!payload.fullName) { toast('Full name is required', 'error'); return; }
+  try {
+    await API.updateStudent(_studentModalId, payload);
+    toast('✅ Student profile updated');
+    await loadStudentModalData();
+    loadStudents();
+  } catch(e) { toast(e.message || 'Failed to save', 'error'); }
+}
+
+async function saveNewParent() {
+  const name  = document.getElementById('sp-name').value.trim();
+  const phone = document.getElementById('sp-phone').value.trim();
+  if (!name || !phone) { toast('Name and phone are required', 'error'); return; }
+  try {
+    await API.addParent(_studentModalId, {
+      fullName:  name,
+      phone,
+      whatsappNumber: document.getElementById('sp-wa').value.trim() || null,
+      email:     document.getElementById('sp-email').value.trim() || null,
+      relationship: document.getElementById('sp-rel').value,
+      preferredLanguage: document.getElementById('sp-lang').value,
+      primary: false,
+    });
+    toast('✅ Parent added');
+    ['sp-name','sp-phone','sp-wa','sp-email'].forEach(id => document.getElementById(id).value = '');
+    await loadStudentModalData();
+  } catch(e) { toast(e.message || 'Failed to add parent', 'error'); }
+}
+
+async function changeStudentStatus(status) {
+  const name = _studentModalData?.fullName || 'this student';
+  if (!confirm(`Change status of ${name} to ${status}?`)) return;
+  try {
+    await API.changeStatus(_studentModalId, { status });
+    toast(`✅ Status changed to ${status}`);
+    await loadStudentModalData();
+    loadStudents();
+  } catch(e) { toast(e.message || 'Failed to change status', 'error'); }
+}
+
+async function activateParentPortal() {
+  const name = _studentModalData?.fullName || 'this student';
+  if (!confirm(`Activate parent portal for ${name}?\nThe primary parent will receive a welcome message with login details.`)) return;
+  try {
+    await API.activateStudentPortal(_studentModalId);
+    toast('✅ Portal activated — welcome message sent');
+    await loadStudentModalData();
+  } catch(e) { toast(e.message || 'Failed to activate portal', 'error'); }
+}
+
+async function deleteStudentRecord() {
+  const name = _studentModalData?.fullName || 'this student';
+  if (!confirm(`Delete ${name}?\nThis is a soft-delete — all history is retained but the record will be hidden.`)) return;
+  if (!confirm(`Are you sure? Type OK to confirm deletion of ${name}.`)) return;
+  try {
+    await API.deleteStudent(_studentModalId);
+    toast(`${name} deleted`);
+    closeStudentModal();
+    loadStudents();
+  } catch(e) { toast(e.message || 'Failed to delete', 'error'); }
+}
+</script>
+
+<!-- ══════ SUBMISSIONS MODAL ══════ -->
+<div id="submissions-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;">
+  <div style="background:white;border-radius:16px;width:740px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div class="card-title" id="sub-modal-title">Submissions</div>
+        <div class="card-sub" id="sub-modal-sub"></div>
+      </div>
+      <button onclick="document.getElementById('submissions-modal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--gray-500);">✕</button>
+    </div>
+    <div style="padding:20px 24px;" id="sub-modal-body">
+      <div class="loading"><span class="spinner-inline"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _subModalAssignmentId  = null;
+let _subModalMaxScore      = 100;
+
+async function openSubmissionsModal(assignmentId, title, maxScore) {
+  _subModalAssignmentId = assignmentId;
+  _subModalMaxScore     = parseFloat(maxScore) || 100;
+  document.getElementById('sub-modal-title').textContent = title;
+  document.getElementById('sub-modal-sub').textContent   = 'Loading…';
+  document.getElementById('submissions-modal').style.display = 'flex';
+  await loadSubmissions();
+}
+
+async function loadSubmissions() {
+  const body = document.getElementById('sub-modal-body');
+  body.innerHTML = '<div class="loading"><span class="spinner-inline"></span></div>';
+  try {
+    const list = await API.getSubmissions(_subModalAssignmentId);
+    const arr  = Array.isArray(list) ? list : [];
+    const graded   = arr.filter(s => s.status === 'GRADED').length;
+    const submitted = arr.filter(s => s.status === 'SUBMITTED').length;
+    const pending   = arr.filter(s => s.status === 'PENDING').length;
+    document.getElementById('sub-modal-sub').textContent =
+      `${arr.length} students · ${graded} graded · ${submitted} submitted · ${pending} pending`;
+
+    if (!arr.length) {
+      body.innerHTML = '<div style="color:var(--gray-500);text-align:center;padding:20px;">No submissions yet</div>';
+      return;
+    }
+
+    body.innerHTML = `
+      <table style="width:100%;">
+        <thead><tr>
+          <th>Student</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Score / ${_subModalMaxScore}</th>
+          <th>Feedback</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${arr.map(s => `
+          <tr id="sub-row-${s.id}">
+            <td><div style="font-weight:600;">${s.studentName||'—'}</div><div style="font-size:11px;color:var(--gray-500);">${s.studentRef||''}</div></td>
+            <td><span class="badge badge-${s.status==='GRADED'?'success':s.status==='SUBMITTED'?'primary':s.status==='EXCUSED'?'warning':'gray'}">${s.status}</span></td>
+            <td style="font-size:12px;">${s.submittedAt ? new Date(s.submittedAt).toLocaleDateString('en-MY') : '—'}</td>
+            <td>
+              <input type="number" class="form-input" style="width:80px;padding:4px 8px;font-size:12px;"
+                id="score-${s.id}" value="${s.score??''}" min="0" max="${_subModalMaxScore}" placeholder="—">
+            </td>
+            <td>
+              <input type="text" class="form-input" style="font-size:12px;padding:4px 8px;"
+                id="fb-${s.id}" value="${s.feedback||''}" placeholder="Feedback…">
+            </td>
+            <td style="white-space:nowrap;">
+              ${s.status!=='EXCUSED' ? `
+                <button class="btn btn-sm btn-success" onclick="gradeSubmission('${s.id}')">✓ Grade</button>
+                <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="excuseSubmission('${s.id}')">Excuse</button>
+              ` : '<span style="font-size:11px;color:var(--gray-500);">Excused</span>'}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="gradeAll()">✓ Save All Grades</button>
+      </div>`;
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--danger);">${e.message}</div>`;
+  }
+}
+
+async function gradeSubmission(subId) {
+  const score    = document.getElementById(`score-${subId}`).value;
+  const feedback = document.getElementById(`fb-${subId}`).value.trim();
+  if (score === '') { toast('Enter a score first', 'error'); return; }
+  try {
+    await API.gradeSubmission(subId, { score: parseFloat(score), feedback: feedback || null });
+    toast('✅ Graded');
+    await loadSubmissions();
+  } catch(e) { toast(e.message || 'Failed to grade', 'error'); }
+}
+
+async function excuseSubmission(subId) {
+  try {
+    await API.excuseSubmission(subId, {});
+    toast('Submission excused');
+    await loadSubmissions();
+  } catch(e) { toast(e.message || 'Failed to excuse', 'error'); }
+}
+
+async function gradeAll() {
+  const rows = document.querySelectorAll('#sub-modal-body tbody tr');
+  let saved = 0, skipped = 0;
+  for (const row of rows) {
+    const subId = row.id.replace('sub-row-','');
+    const scoreEl = document.getElementById(`score-${subId}`);
+    const fbEl    = document.getElementById(`fb-${subId}`);
+    if (!scoreEl || scoreEl.value === '') { skipped++; continue; }
+    try {
+      await API.gradeSubmission(subId, {
+        score:    parseFloat(scoreEl.value),
+        feedback: fbEl?.value.trim() || null,
+      });
+      saved++;
+    } catch { skipped++; }
+  }
+  toast(`✅ ${saved} graded, ${skipped} skipped`);
+  await loadSubmissions();
+}
+</script>
+
+<!-- ══════ PAYMENT MODAL ══════ -->
+<div id="pay-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;width:440px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+      <div class="card-title" id="pay-modal-title">Record Payment</div>
+      <button onclick="document.getElementById('pay-modal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--gray-500);">✕</button>
+    </div>
+    <div style="padding:20px 24px;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount Paid (RM) *</label><input class="form-input" id="pay-amount" type="number" min="0.01" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Payment Date *</label><input class="form-input" id="pay-date" type="date"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Payment Method</label>
+          <select class="form-select" id="pay-method">
+            <option value="CASH">Cash</option>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="ONLINE">Online (e.g. DuitNow)</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="CARD">Card</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Reference No.</label><input class="form-input" id="pay-ref" placeholder="e.g. TXN123 (optional)"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="pay-notes" placeholder="Optional notes"></div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn btn-primary" onclick="submitPayment()">✓ Record Payment</button>
+        <button class="btn btn-outline" onclick="document.getElementById('pay-modal').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _payFeeId = null;
+
+async function submitPayment() {
+  const amount = parseFloat(document.getElementById('pay-amount').value);
+  const date   = document.getElementById('pay-date').value;
+  if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+  if (!date) { toast('Payment date is required', 'error'); return; }
+  try {
+    await API.recordPayment(_payFeeId, {
+      amountPaid:      amount,
+      paymentDate:     date,
+      paymentMethod:   document.getElementById('pay-method').value,
+      referenceNumber: document.getElementById('pay-ref').value.trim() || null,
+      notes:           document.getElementById('pay-notes').value.trim() || 'Admin recorded',
+    });
+    toast('✅ Payment recorded');
+    document.getElementById('pay-modal').style.display = 'none';
+    loadFees();
+  } catch(e) { toast(e.message || 'Failed to record payment', 'error'); }
+}
+
+async function waiveFeeRecord(feeId, studentName) {
+  const reason = prompt(`Waive fee for ${studentName}?\nEnter reason (optional):`);
+  if (reason === null) return; // cancelled
+  try {
+    await API.waiveFee(feeId, { reason: reason || 'Admin waived' });
+    toast(`Fee waived for ${studentName}`);
+    loadFees();
+  } catch(e) { toast(e.message || 'Failed to waive', 'error'); }
+}
+</script>
+
+<!-- ══════ EDIT CLASS MODAL ══════ -->
+<div id="edit-class-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;width:620px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+      <div class="card-title">Edit Class</div>
+      <button onclick="document.getElementById('edit-class-modal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--gray-500);">✕</button>
+    </div>
+    <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Class Name *</label><input class="form-input" id="ef-name"></div>
+        <div class="form-group"><label class="form-label">Subject *</label><select class="form-select" id="ef-subject"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Branch *</label><select class="form-select" id="ef-branch"></select></div>
+        <div class="form-group"><label class="form-label">Teacher</label><select class="form-select" id="ef-teacher"><option value="">— None —</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Day of Week *</label>
+          <select class="form-select" id="ef-day">
+            <option>MONDAY</option><option>TUESDAY</option><option>WEDNESDAY</option>
+            <option>THURSDAY</option><option>FRIDAY</option><option>SATURDAY</option><option>SUNDAY</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Start Time *</label><input class="form-input" id="ef-start" type="time"></div>
+        <div class="form-group"><label class="form-label">End Time *</label><input class="form-input" id="ef-end" type="time"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date *</label><input class="form-input" id="ef-startdate" type="date"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" id="ef-enddate" type="date"></div>
+        <div class="form-group"><label class="form-label">Max Capacity</label><input class="form-input" id="ef-capacity" type="number" min="1"></div>
+        <div class="form-group"><label class="form-label">Monthly Fee (RM)</label><input class="form-input" id="ef-fee" type="number" min="0" step="0.01"></div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="ef-active"> <span class="form-label" style="margin:0;">Active</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="submitEditClass()">✓ Save Changes</button>
+        <button class="btn btn-outline" onclick="document.getElementById('edit-class-modal').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _editClassId = null;
+
+async function openEditClassModal(t) {
+  _editClassId = t.id;
+  document.getElementById('ef-name').value      = t.name || '';
+  document.getElementById('ef-start').value     = t.startTime?.slice(0,5) || '';
+  document.getElementById('ef-end').value       = t.endTime?.slice(0,5) || '';
+  document.getElementById('ef-startdate').value = t.startDate || '';
+  document.getElementById('ef-enddate').value   = t.endDate || '';
+  document.getElementById('ef-capacity').value  = t.maxCapacity || 30;
+  document.getElementById('ef-fee').value       = t.feeAmount || '';
+  document.getElementById('ef-active').checked  = t.active !== false;
+  document.getElementById('ef-day').value       = t.dayOfWeek || 'MONDAY';
+
+  // Populate & set subject
+  const subSel = document.getElementById('ef-subject');
+  subSel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const subs = await API.getSubjects();
+    subSel.innerHTML = (Array.isArray(subs) ? subs : [])
+      .map(s => `<option value="${s.id}" ${s.id===t.subjectId?'selected':''}>${s.name}</option>`).join('');
+  } catch { subSel.innerHTML = '<option value="">Failed to load</option>'; }
+
+  // Populate & set branch
+  const brSel = document.getElementById('ef-branch');
+  brSel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const brs = await API.getBranches();
+    brSel.innerHTML = (Array.isArray(brs) ? brs : (brs?.content||[]))
+      .map(b => `<option value="${b.id}" ${b.id===t.branchId?'selected':''}>${b.name}</option>`).join('');
+  } catch { brSel.innerHTML = '<option value="">Failed to load</option>'; }
+
+  // Populate & set teacher
+  const tSel = document.getElementById('ef-teacher');
+  tSel.innerHTML = '<option value="">— None —</option>';
+  try {
+    const staff = await API.getStaff({ role: 'TEACHER', active: true });
+    tSel.innerHTML += (Array.isArray(staff) ? staff : [])
+      .map(s => `<option value="${s.id}" ${s.id===t.teacherId?'selected':''}>${s.fullName}</option>`).join('');
+  } catch {}
+
+  document.getElementById('edit-class-modal').style.display = 'flex';
+}
+
+async function submitEditClass() {
+  const name      = document.getElementById('ef-name').value.trim();
+  const subjectId = document.getElementById('ef-subject').value;
+  const branchId  = document.getElementById('ef-branch').value;
+  const dayOfWeek = document.getElementById('ef-day').value;
+  const startTime = document.getElementById('ef-start').value;
+  const endTime   = document.getElementById('ef-end').value;
+  const startDate = document.getElementById('ef-startdate').value;
+  const endDate   = document.getElementById('ef-enddate').value;
+  const capacity  = document.getElementById('ef-capacity').value;
+  const fee       = document.getElementById('ef-fee').value;
+  const teacherId = document.getElementById('ef-teacher').value;
+  const active    = document.getElementById('ef-active').checked;
+
+  if (!name)      { toast('Class name is required', 'error'); return; }
+  if (!subjectId) { toast('Subject is required', 'error'); return; }
+  if (!branchId)  { toast('Branch is required', 'error'); return; }
+  if (!startTime) { toast('Start time is required', 'error'); return; }
+  if (!endTime)   { toast('End time is required', 'error'); return; }
+  if (!startDate) { toast('Start date is required', 'error'); return; }
+
+  try {
+    await API.updateTemplate(_editClassId, {
+      name, subjectId, branchId, dayOfWeek, startTime, endTime, startDate,
+      endDate: endDate || null,
+      maxCapacity: capacity ? parseInt(capacity) : 30,
+      feeAmount: fee ? parseFloat(fee) : null,
+      teacherId: teacherId || null,
+      active,
+    });
+    toast('✅ Class updated successfully');
+    document.getElementById('edit-class-modal').style.display = 'none';
+    loadClasses();
+  } catch(e) {
+    toast(e.message || 'Failed to update class', 'error');
+  }
+}
+</script>
+
+<!-- ══════ ENROLL MODAL ══════ -->
+<div id="enroll-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:700;font-size:16px;" id="enroll-modal-title">Enroll Student</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px;" id="enroll-modal-sub"></div>
+      </div>
+      <button onclick="closeEnrollModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--gray-500);">✕</button>
+    </div>
+    <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+      <!-- Tab buttons -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="tab-enroll" class="btn btn-primary btn-sm" onclick="switchEnrollTab('enroll')">Enroll a Student</button>
+        <button id="tab-roster" class="btn btn-outline btn-sm" onclick="switchEnrollTab('roster')">Current Roster</button>
+      </div>
+      <!-- Enroll tab -->
+      <div id="enroll-tab-enroll">
+        <input class="form-input" id="enroll-search" placeholder="Search student by name…" oninput="searchEnrollStudents()" style="margin-bottom:12px;">
+        <div id="enroll-student-results" style="max-height:220px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:8px;"></div>
+        <div id="enroll-selected" style="margin-top:12px;display:none;">
+          <div style="background:var(--primary-light);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:600;" id="enroll-selected-name"></span>
+            <button class="btn btn-sm btn-outline" onclick="clearEnrollSelection()">✕ Clear</button>
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label class="form-label">Enrolled Date</label>
+            <input class="form-input" id="enroll-date" type="date">
+          </div>
+          <button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="confirmEnroll()">✓ Confirm Enrolment</button>
+        </div>
+      </div>
+      <!-- Roster tab -->
+      <div id="enroll-tab-roster" style="display:none;">
+        <div id="enroll-roster-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Enrollment modal state ────────────────────────────────────────────────────
+let _enrollClassId   = null;
+let _enrollClassName = null;
+let _enrollStudentId = null;
+
+function openEnrollModal(classId, className, enrolledCount, maxCapacity) {
+  _enrollClassId   = classId;
+  _enrollClassName = className;
+  _enrollStudentId = null;
+  document.getElementById('enroll-modal-title').textContent = 'Enroll Student — ' + className;
+  document.getElementById('enroll-modal-sub').textContent   = enrolledCount + ' / ' + maxCapacity + ' students enrolled';
+  document.getElementById('enroll-search').value = '';
+  document.getElementById('enroll-student-results').innerHTML = '';
+  document.getElementById('enroll-selected').style.display = 'none';
+  document.getElementById('enroll-date').value = new Date().toISOString().slice(0,10);
+  switchEnrollTab('enroll');
+  document.getElementById('enroll-modal').style.display = 'flex';
+}
+
+function closeEnrollModal() {
+  document.getElementById('enroll-modal').style.display = 'none';
+}
+
+function switchEnrollTab(tab) {
+  document.getElementById('enroll-tab-enroll').style.display = tab === 'enroll' ? '' : 'none';
+  document.getElementById('enroll-tab-roster').style.display = tab === 'roster' ? '' : 'none';
+  document.getElementById('tab-enroll').className = 'btn btn-sm ' + (tab === 'enroll' ? 'btn-primary' : 'btn-outline');
+  document.getElementById('tab-roster').className = 'btn btn-sm ' + (tab === 'roster' ? 'btn-primary' : 'btn-outline');
+  if (tab === 'roster') loadRoster();
+}
+
+let _enrollSearchTimer = null;
+function searchEnrollStudents() {
+  clearTimeout(_enrollSearchTimer);
+  _enrollSearchTimer = setTimeout(async () => {
+    const q = document.getElementById('enroll-search').value.trim();
+    const el = document.getElementById('enroll-student-results');
+    if (!q) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="padding:10px;color:var(--gray-500);">Searching…</div>';
+    try {
+      const list = await API.getStudents({ name: q });
+      const arr  = Array.isArray(list) ? list : (list?.content || []);
+      if (!arr.length) { el.innerHTML = '<div style="padding:10px;color:var(--gray-500);">No students found</div>'; return; }
+      el.innerHTML = arr.map(s => `
+        <div onclick="selectEnrollStudent('${s.id}','${(s.fullName||s.name||'').replace(/'/g,"\\'")}','${s.studentRef||''}')"
+             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center;"
+             onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background=''">
+          <span style="font-weight:600;">${s.fullName||s.name||'—'}</span>
+          <span style="font-size:12px;color:var(--gray-500);">${s.studentRef||''}</span>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = `<div style="padding:10px;color:var(--danger);">${e.message}</div>`; }
+  }, 350);
+}
+
+function selectEnrollStudent(id, name, ref) {
+  _enrollStudentId = id;
+  document.getElementById('enroll-selected-name').textContent = name + (ref ? '  (' + ref + ')' : '');
+  document.getElementById('enroll-selected').style.display = 'block';
+  document.getElementById('enroll-student-results').innerHTML = '';
+  document.getElementById('enroll-search').value = '';
+}
+
+function clearEnrollSelection() {
+  _enrollStudentId = null;
+  document.getElementById('enroll-selected').style.display = 'none';
+}
+
+async function confirmEnroll() {
+  if (!_enrollStudentId) { toast('Please select a student', 'error'); return; }
+  const enrolledDate = document.getElementById('enroll-date').value;
+  try {
+    await API.enrollStudent(_enrollClassId, { studentId: _enrollStudentId, enrolledDate: enrolledDate || null });
+    toast('✅ Student enrolled successfully');
+    closeEnrollModal();
+    loadClasses();
+  } catch(e) { toast(e.message || 'Enrolment failed', 'error'); }
+}
+
+async function loadRoster() {
+  const el = document.getElementById('enroll-roster-list');
+  el.innerHTML = '<div style="color:var(--gray-500);padding:8px;">Loading…</div>';
+  try {
+    const list = await API.getEnrollments(_enrollClassId);
+    const arr  = Array.isArray(list) ? list.filter(e => e.status === 'ACTIVE') : [];
+    if (!arr.length) { el.innerHTML = '<div style="color:var(--gray-500);padding:8px;">No active enrolments</div>'; return; }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:var(--gray-50);">
+        <th style="padding:8px 10px;text-align:left;font-weight:600;">Student</th>
+        <th style="padding:8px 10px;text-align:left;font-weight:600;">Ref</th>
+        <th style="padding:8px 10px;text-align:left;font-weight:600;">Enrolled</th>
+        <th style="padding:8px 10px;"></th>
+      </tr></thead>
+      <tbody>${arr.map(e => `
+        <tr style="border-top:1px solid var(--gray-100);">
+          <td style="padding:8px 10px;font-weight:600;">${e.studentName||'—'}</td>
+          <td style="padding:8px 10px;color:var(--gray-500);">${e.studentRef||'—'}</td>
+          <td style="padding:8px 10px;color:var(--gray-500);">${e.enrolledDate||'—'}</td>
+          <td style="padding:8px 10px;text-align:right;">
+            <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;border:none;"
+              onclick="dropFromClass('${e.studentId}','${(e.studentName||'').replace(/'/g,"\\'")}')">Drop</button>
+          </td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch(e) { el.innerHTML = `<div style="color:var(--danger);padding:8px;">${e.message}</div>`; }
+}
+
+async function dropFromClass(studentId, studentName) {
+  if (!confirm(`Drop ${studentName} from this class?`)) return;
+  try {
+    await API.dropStudent(_enrollClassId, studentId);
+    toast(`${studentName} has been dropped`);
+    loadRoster();
+    loadClasses();
+  } catch(e) { toast(e.message || 'Failed to drop student', 'error'); }
+}
 </script>
 </body>
 </html>

@@ -31,7 +31,7 @@ public interface StaffRepository extends JpaRepository<Staff, UUID> {
               AND (:branchId IS NULL OR s.branch.id = :branchId)
               AND (:role     IS NULL OR s.role = :role)
               AND (:active   IS NULL OR s.active = :active)
-              AND (:name     IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :name, '%')))
+              AND (:name     IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%')))
             ORDER BY s.fullName
             """)
     List<Staff> search(@Param("branchId") UUID branchId,

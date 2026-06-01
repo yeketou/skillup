@@ -73,25 +73,43 @@ const API = (() => {
     const getDashboard = () => get('/reports/dashboard');
 
     // ── Branches ──────────────────────────────────────────────────────────────
-    const getBranches = () => get('/branches');
+    const getBranches      = ()        => get('/branches');
+    const createBranch     = data      => post('/branches', data);
+    const updateBranch     = (id,data) => put(`/branches/${id}`, data);
+    const deactivateBranch = id        => patch(`/branches/${id}/deactivate`);
+    const deleteBranch     = id        => request('DELETE', `/branches/${id}`);
+    const getSubjects      = (activeOnly = true) => get(`/subjects?activeOnly=${activeOnly}`);
+    const createSubject    = data      => post('/subjects', data);
+    const updateSubject    = (id,data) => put(`/subjects/${id}`, data);
+    const deleteSubject    = id        => request('DELETE', `/subjects/${id}`);
 
     // ── Students ──────────────────────────────────────────────────────────────
     const getStudents = (params = {}) => {
         const q = new URLSearchParams(params).toString();
         return get(`/students${q ? '?' + q : ''}`);
     };
-    const getStudent      = id   => get(`/students/${id}`);
+    const getStudent      = id        => get(`/students/${id}`);
+    const updateStudent   = (id,data) => put(`/students/${id}`, data);
+    const changeStatus    = (id,data) => patch(`/students/${id}/status`, data);
+    const addParent       = (id,data) => post(`/students/${id}/parents`, data);
+    const activateStudentPortal = id  => post(`/students/${id}/portal/activate`, {});
+    const deleteStudent   = id        => request('DELETE', `/students/${id}`);
     const createStudent   = data => post('/students', data);
     const getStudentFees  = id   => get(`/students/${id}/fees`);
-    const getStudentReport = id  => get(`/reports/students/${id}`);
+    const getStudentReport   = id => get(`/reports/students/${id}`);
+    const getStudentTimetable = id => get(`/students/${id}/timetable`);
 
     // ── Classes & Sessions ────────────────────────────────────────────────────
     const getTemplates   = (params = {}) => {
         const q = new URLSearchParams(params).toString();
         return get(`/classes${q ? '?' + q : ''}`);       // GET /classes (no /templates suffix)
     };
-    const getTemplate    = id   => get(`/classes/${id}`);
-    const createTemplate = data => post('/classes', data);
+    const getTemplate    = id        => get(`/classes/${id}`);
+    const createTemplate = data      => post('/classes', data);
+    const updateTemplate = (id,data) => put(`/classes/${id}`, data);
+    const getEnrollments = classId => get(`/classes/${classId}/enrollments`);
+    const enrollStudent  = (classId, data) => post(`/classes/${classId}/enroll`, data);
+    const dropStudent    = (classId, studentId) => request('DELETE', `/classes/${classId}/enrollments/${studentId}`);
 
     const getSessions = (templateId, from, to) => {
         const q = new URLSearchParams({ ...(from && {from}), ...(to && {to}) }).toString();
@@ -115,15 +133,18 @@ const API = (() => {
         return get(`/fees${q ? '?' + q : ''}`);
     };
     const recordPayment   = (id, data) => post(`/fees/${id}/pay`, data);
-    const waiveFee        = (id, data) => post(`/fees/${id}/waive`, data);
+    const waiveFee        = (id, data) => patch(`/fees/${id}/waive`, data);
     const generateFees    = data => post('/fees/generate', data);
 
     // ── Assignments ───────────────────────────────────────────────────────────
     const getAssignments = templateId =>
         get(`/classes/${templateId}/assignments`);
-    const createAssignment = data => post('/assignments', data);
-    const getSubmissions   = assignmentId => get(`/assignments/${assignmentId}/submissions`);
-    const gradeSubmission  = (subId, data) => patch(`/assignments/submissions/${subId}/grade`, data);
+    const createAssignment   = data  => post('/assignments', data);
+    const publishAssignment  = id    => post(`/assignments/${id}/publish`, {});
+    const closeAssignment    = id    => post(`/assignments/${id}/close`, {});
+    const getSubmissions     = id    => get(`/assignments/${id}/submissions`);
+    const gradeSubmission    = (subId, data) => patch(`/submissions/${subId}/grade`, data);
+    const excuseSubmission   = (subId, data) => patch(`/submissions/${subId}/excuse`, data);
 
     // ── Exams / Results ───────────────────────────────────────────────────────
     const getClassResults  = (templateId, examName) => {
@@ -134,7 +155,9 @@ const API = (() => {
         const q = new URLSearchParams(params).toString();
         return get(`/students/${studentId}/exam-results${q ? '?' + q : ''}`);
     };
-    const recordResult  = data  => post('/exam-results', data);
+    const recordResult      = data      => post('/exam-results', data);
+    const bulkRecordResult  = data      => post('/exam-results/bulk', data);
+    const updateExamResult  = (id,data) => patch(`/exam-results/${id}`, data);
 
     // ── Staff ─────────────────────────────────────────────────────────────────
     const getStaff = (params = {}) => {
@@ -154,8 +177,21 @@ const API = (() => {
     // ── Admin ─────────────────────────────────────────────────────────────────
     const generateSessions2 = (weeks) =>
         post(`/admin/sessions/generate-upcoming${weeks ? '?lookaheadWeeks='+weeks : ''}`);
-    const getHolidays = year => get(`/admin/public-holidays?year=${year || new Date().getFullYear()}`);
-    const addHoliday  = data => post('/admin/public-holidays', data);
+    const getHolidays    = year => get(`/admin/public-holidays?year=${year || new Date().getFullYear()}`);
+    const addHoliday     = data => post('/admin/public-holidays', data);
+    const deleteHoliday  = id   => request('DELETE', `/admin/public-holidays/${id}`);
+    const getFinancialReport  = (from,to,branchId) => {
+        const q = new URLSearchParams({ fromMonth:from, toMonth:to, ...(branchId?{branchId}:{}) }).toString();
+        return get(`/reports/financial?${q}`);
+    };
+    const getAttendanceReport = (from,to,branchId,threshold=80) => {
+        const q = new URLSearchParams({ fromDate:from, toDate:to, lowThreshold:threshold, ...(branchId?{branchId}:{}) }).toString();
+        return get(`/reports/attendance?${q}`);
+    };
+    const getAcademicReport   = (from,to,branchId) => {
+        const q = new URLSearchParams({ fromDate:from, toDate:to, ...(branchId?{branchId}:{}) }).toString();
+        return get(`/reports/academic?${q}`);
+    };
 
     return {
         // Token
@@ -164,15 +200,23 @@ const API = (() => {
         login, logout,
         // Data
         getDashboard,
-        getBranches,
-        getStudents, getStudent, createStudent, getStudentFees, getStudentReport,
-        getTemplates, getTemplate, createTemplate,
+        getBranches, createBranch, updateBranch, deactivateBranch, deleteBranch,
+        getSubjects, createSubject, updateSubject, deleteSubject,
+        getStudents, getStudent, updateStudent, changeStatus, addParent,
+        activateStudentPortal, deleteStudent,
+        createStudent, getStudentFees, getStudentReport,
+        getTemplates, getTemplate, createTemplate, updateTemplate,
+        getEnrollments, enrollStudent, dropStudent,
         getSessions, getUpcomingSessions, getSessionAttendance, markAttendance, updateAttendanceMark, generateSessions,
+        updateSessionStatus: (id, status, notes) => patch(`/sessions/${id}/status`, { status, notes: notes||null }),
         getFees, recordPayment, waiveFee, generateFees,
-        getAssignments, createAssignment, getSubmissions, gradeSubmission,
-        getClassResults, getStudentResults, recordResult,
+        getAssignments, createAssignment, publishAssignment, closeAssignment,
+        getSubmissions, gradeSubmission, excuseSubmission,
+        getClassResults, getStudentResults, recordResult, bulkRecordResult, updateExamResult,
+        getStudentTimetable,
         getStaff, createStaff, activatePortal,
         sendMessage, getCommLogs,
-        generateSessions2, getHolidays, addHoliday,
+        generateSessions2, getHolidays, addHoliday, deleteHoliday,
+        getFinancialReport, getAttendanceReport, getAcademicReport,
     };
 })();

@@ -14,17 +14,20 @@ import java.util.UUID;
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, UUID> {
 
-    @Query("SELECT s FROM ClassSession s WHERE s.id = :id AND s.deletedAt IS NULL")
+    @Query("SELECT s FROM ClassSession s JOIN FETCH s.template t LEFT JOIN FETCH t.subject LEFT JOIN FETCH t.teacher WHERE s.id = :id AND s.deletedAt IS NULL")
     Optional<ClassSession> findActiveById(@Param("id") UUID id);
 
     /** All sessions for a template, ordered by date. */
-    @Query("SELECT s FROM ClassSession s WHERE s.template.id = :templateId AND s.deletedAt IS NULL ORDER BY s.sessionDate")
+    @Query("SELECT s FROM ClassSession s JOIN FETCH s.template t LEFT JOIN FETCH t.subject LEFT JOIN FETCH t.teacher WHERE t.id = :templateId AND s.deletedAt IS NULL ORDER BY s.sessionDate")
     List<ClassSession> findByTemplateId(@Param("templateId") UUID templateId);
 
     /** Sessions for a template within a date range (inclusive). */
     @Query("""
             SELECT s FROM ClassSession s
-            WHERE s.template.id = :templateId
+            JOIN FETCH s.template t
+            LEFT JOIN FETCH t.subject
+            LEFT JOIN FETCH t.teacher
+            WHERE t.id = :templateId
               AND s.sessionDate BETWEEN :from AND :to
               AND s.deletedAt IS NULL
             ORDER BY s.sessionDate
@@ -39,6 +42,9 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, UUID
     /** Upcoming sessions across all templates from a given date. */
     @Query("""
             SELECT s FROM ClassSession s
+            JOIN FETCH s.template t
+            LEFT JOIN FETCH t.subject
+            LEFT JOIN FETCH t.teacher
             WHERE s.sessionDate >= :from
               AND s.deletedAt IS NULL
             ORDER BY s.sessionDate, s.startTime
@@ -51,7 +57,10 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, UUID
      */
     @Query("""
             SELECT s FROM ClassSession s
-            WHERE s.template.teacher.id = :teacherId
+            JOIN FETCH s.template t
+            LEFT JOIN FETCH t.subject
+            LEFT JOIN FETCH t.teacher
+            WHERE t.teacher.id = :teacherId
               AND s.deletedAt IS NULL
               AND s.sessionDate >= :from
               AND s.sessionDate <= :to
